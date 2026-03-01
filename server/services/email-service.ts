@@ -417,7 +417,7 @@ class EmailService {
           </div>
           <div style="text-align: center; margin: 30px 0;">
             <p style="color: #888888;">Get ready to earn your respect on the table.</p>
-            <a href="https://actionladder.net/app?tab=matches" style="background-color: #00ff00; color: #000000; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            <a href="https://actionladder.net/app?tab=escrow-challenges" style="background-color: #00ff00; color: #000000; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
               VIEW MY MATCHES 🎯
             </a>
           </div>

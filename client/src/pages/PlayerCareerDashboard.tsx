@@ -602,8 +602,7 @@ export default function PlayerCareerDashboard() {
   const handleActivateService = (type: string) => {
     const existing = services?.find((s) => s.serviceType === type);
     if (existing) {
-      // Navigate to edit page — adjust route as needed
-      window.location.href = `/player/services/${existing.id}`;
+      queryClient.invalidateQueries({ queryKey: ["/api/player/services"] });
     } else {
       activateService.mutate(type);
     }

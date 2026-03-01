@@ -272,8 +272,8 @@ export function createMatchEntry(storage: IStorage, stripe: Stripe) {
           venue_id: venueId || "",
           revenue_split_percent: revenueSplitPercent.toString(),
         },
-        success_url: `${req.protocol}://${req.get('host')}/app?tab=matches&success=payment-complete&match_id=${matchId}`,
-        cancel_url: `${req.protocol}://${req.get('host')}/app?tab=matches&cancelled=true`,
+        success_url: `${req.protocol}://${req.get('host')}/app?tab=escrow-challenges&success=payment-complete&match_id=${matchId}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/app?tab=escrow-challenges&cancelled=true`,
       });
 
       const matchEntry = await storage.createMatchEntry({

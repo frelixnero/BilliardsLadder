@@ -444,6 +444,18 @@ function App() {
             <Route path="/join">
               <JoinPage />
             </Route>
+            <Route path="/home">
+              {() => { window.location.href = "/app?tab=dashboard"; return null; }}
+            </Route>
+            <Route path="/owner-dashboard">
+              {() => { window.location.href = "/app?tab=admin"; return null; }}
+            </Route>
+            <Route path="/trustee-dashboard">
+              {() => { window.location.href = "/app?tab=admin"; return null; }}
+            </Route>
+            <Route path="/operator-dashboard">
+              {() => { window.location.href = "/app?tab=operator-settings"; return null; }}
+            </Route>
             <Route path="/training/leaderboard/:hallId?">
               <HallLeaderboard />
             </Route>

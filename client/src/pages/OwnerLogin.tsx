@@ -62,7 +62,7 @@ export default function OwnerLogin() {
           description: "Login successful.",
         });
         
-        window.location.href = "/owner-dashboard";
+        window.location.href = "/app?tab=admin";
       }
     },
     onError: (error: any) => {

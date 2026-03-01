@@ -62,7 +62,7 @@ export default function TrusteeLogin() {
           description: "Login successful.",
         });
         
-        window.location.href = "/trustee-dashboard";
+        window.location.href = "/app?tab=admin";
       }
     },
     onError: (error: any) => {

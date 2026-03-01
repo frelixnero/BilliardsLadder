@@ -72,3 +72,9 @@ The system is built on a modern web stack designed for performance, scalability,
 - "Create Account" button links to `/signup`, "Sign In" button links to `/login`
 - "Join the Queue" button on 9ft LadderPage navigates to `/join`
 - Queue API (`POST /api/player-queue`) not yet implemented — can be added later when needed
+
+### Route Audit & Fixes
+- **Fixed broken post-login redirects**: Login.tsx, OwnerLogin.tsx, TrusteeLogin.tsx now redirect to proper `/app?tab=...` routes instead of non-existent `/owner-dashboard`, `/trustee-dashboard`, `/operator-dashboard`, `/home`
+- **Added legacy redirect routes** in App.tsx: `/home` → dashboard, `/owner-dashboard` → admin, `/trustee-dashboard` → admin, `/operator-dashboard` → operator-settings
+- **Fixed server-side `tab=matches`** references in email-service.ts and tournament.controller.ts → changed to `tab=escrow-challenges`
+- **Fixed `/player/services/:id`** dead link in PlayerCareerDashboard.tsx — removed navigation to non-existent route
