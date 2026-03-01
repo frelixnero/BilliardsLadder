@@ -25,8 +25,7 @@ The system is built on a modern web stack designed for performance, scalability,
 - **Styling**: Tailwind CSS with a custom dark theme.
 - **Challenge Pool System**: Features credit-based entries, wallet management, configurable challenge markets, automated resolution, and a transaction ledger. Includes anti-ghosting protection via pre-funding and a tiered service fee structure.
 - **AI Billiards Coach**: Integrates Dr. Dave's physics rules for shot analysis, provides insights on overdraw, spin bias, break accuracy, and other techniques. It includes a scoring formula for improvement and monthly leaderboards.
-- **Authentication**: A multi-tier role system (OWNER, REGIONAL_OPERATOR, POOL_HALL_OWNER, LOCAL_OPERATOR, PLAYER, STAFF, TRUSTEE) with password login, 2FA for Creator accounts, and a secret Founder Login page at `/founder-login`.
-- **Revenue Split**: Configurable revenue distribution — 23% Founder, 33% Pool Hall Operators, 43% Player Prize Pool, 1% Platform Ops.
+- **Authentication**: A three-tier system with Creator/Owner, Operator, and Player roles, supporting password login and 2FA for Creator accounts.
 - **Language Sanitization**: An automatic system replaces gambling terms with league-safe terminology across the application, enforced via middleware and a SafeText React component.
 - **Live Streaming**: Multi-platform integration (Twitch, YouTube, Facebook, TikTok, Kick) with geographic filtering and stream categories.
 
@@ -35,7 +34,7 @@ The system is built on a modern web stack designed for performance, scalability,
 - **Special Events**: Supports birthday bonuses, charity nights, and player support programs (e.g., "Player in Need Rule").
 - **Respect Points System**: Community recognition for sportsmanship.
 - **Side Betting System**: Credit-based wagering with closed-loop funds.
-- **Financial Features**: All tiers are paid — no free membership. Membership tiers: Rookie ($25/month, no challenger fee), Standard ($35/month, $60+ up to $500 challenger fee per match), Premium ($45/month, $60+ up to $1,000 challenger fee with approval). Player Career Dashboard with service marketplace for coaching, exhibitions, and content subscriptions. League fees are 5% for members, 15% for non-members.
+- **Financial Features**: Entry ranges from $60 to $500,000 for high-stakes players. League fees are 5% for members, 15% for non-members. Membership tiers include Basic ($25/month) and Pro ($60/month).
 - **Automated Rewards**: The AI Coach system includes automated monthly rewards for top trainers, offering Stripe subscription discounts.
 
 ## External Dependencies

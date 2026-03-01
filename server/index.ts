@@ -1,14 +1,22 @@
+// ⚡ Validate all env vars at startup — fails fast with a clear message if any are missing
+import "./config/env";
+
 import express, { type Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { requestIdMiddleware, errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { logger } from "./lib/logger";
 
 const app = express();
 
 // Trust proxy for proper IP detection behind reverse proxy
 app.set('trust proxy', 1);
+
+// Attach requestId to every request (used in error responses + logs)
+app.use(requestIdMiddleware);
 
 // Security headers with Helmet
 app.use(helmet({
@@ -127,14 +135,6 @@ if (process.env.NODE_ENV === "development") {
 
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -143,6 +143,12 @@ if (process.env.NODE_ENV === "development") {
   } else {
     serveStatic(app);
   }
+
+  // 404 handler — must be after all routes AND vite, before errorHandler
+  app.use(notFoundHandler);
+
+  // Global error handler — must be LAST middleware (4-arg signature required)
+  app.use(errorHandler);
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // The system expects port 5000 to be opened. Use environment variable PORT which is set to 5000.
@@ -155,5 +161,6 @@ if (process.env.NODE_ENV === "development") {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    logger.info(`Server started`, { port, env: process.env.NODE_ENV });
   });
 })();
