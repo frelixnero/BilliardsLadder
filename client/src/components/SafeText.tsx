@@ -35,6 +35,7 @@ const WORD_MAP: Record<string, string> = {
 };
 
 function sanitizeText(input: string): string {
+  if (typeof input !== 'string') return String(input ?? '');
   const pattern = new RegExp(`\\b(${Object.keys(WORD_MAP).join('|')})\\b`, 'gi');
   return input.replace(pattern, (match) => {
     const lowerMatch = match.toLowerCase();

@@ -43,3 +43,25 @@ The system is built on a modern web stack designed for performance, scalability,
 - **Email Notifications**: SendGrid (for admin summaries and notifications related to rewards).
 - **OCR**: tesseract.js (for optical character recognition capabilities within tournament features).
 - **Database**: PostgreSQL (available as an option, currently in-memory storage is used for core data).
+
+## Recent Changes (Session Notes)
+
+### Ladder Page Standardization
+- All three ladder pages (9ft LadderPage, 8ft EightFootLadderPage, 7ft BarboxLadderPage) now share consistent structure: Hero → Challenger Handicap → Top 3 Podium → Contenders/Elite divisions → Games → CTA
+- MembershipDisplay, pricing, and subscription upsells removed from all ladder pages (membership info belongs only in registration: PlayerSubscriptionTiers, Signup, SelectRole)
+- WeightRulesDisplay (challenger handicap) improved with plain-English 3-tier explanation, present on all 3 pages
+- App.tsx imports 9ft ladder from `@/pages/LadderPage` (not `@/components/ladder`)
+- "Kiddie Box King" dev notes added — humorous name for 7ft table, NOT related to children
+
+### Bug Fixes
+- SafeText.tsx: Guard against undefined/non-string `children` in `sanitizeText()` (was crashing `/player/career`)
+- Fixed `<a>` inside `<Link>` nesting in OwnerLogin.tsx, TrusteeLogin.tsx, ForgotPassword.tsx (wouter v2 renders its own `<a>`)
+- 404 page: Replaced developer text with user-friendly message + dark theme styling
+- Privacy page: Updated email from `privacy@tricityladder.com` to `privacy@actionladder.com`
+- Branding: Header.tsx → "ACTIONLADDER BILLIARDS", Footer.tsx → "Action Ladder Billiards", Landing.tsx footer year → 2025
+
+### Revenue Split
+- 23% Founder, 33% Operator, 43% Player Prize Pool, 1% Platform Ops
+
+### Challenger Fee Model
+- Rookie = $0/match, Standard = $60/match, Premium = $60/match

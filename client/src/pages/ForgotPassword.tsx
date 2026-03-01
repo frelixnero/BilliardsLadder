@@ -166,11 +166,9 @@ export default function ForgotPassword() {
               </Form>
 
               <div className="text-center">
-                <Link href="/login">
-                  <a className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center justify-center" data-testid="link-back-to-login">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Sign In
-                  </a>
+                <Link href="/login" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center justify-center" data-testid="link-back-to-login">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Sign In
                 </Link>
               </div>
             </>
@@ -296,11 +294,9 @@ export default function ForgotPassword() {
                   </button>
                 </div>
                 <div>
-                  <Link href="/login">
-                    <a className="text-gray-400 hover:text-white flex items-center justify-center" data-testid="link-back-to-login">
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back to Sign In
-                    </a>
+                  <Link href="/login" className="text-gray-400 hover:text-white flex items-center justify-center" data-testid="link-back-to-login">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Sign In
                   </Link>
                 </div>
               </div>

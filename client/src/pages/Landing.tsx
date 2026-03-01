@@ -257,7 +257,7 @@ export default function Landing() {
               
               <div className="pt-6 border-t border-gray-800/50 w-full">
                 <p className="text-gray-500 text-sm">
-                  © 2024 Action Ladder Billiards. All rights reserved.
+                  © 2025 Action Ladder Billiards. All rights reserved.
                 </p>
               </div>
             </div>

@@ -8,7 +8,7 @@ import { ChevronDown, Trophy, Camera, DollarSign, Users, Settings } from "lucide
 import type { GlobalRole } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/components/dashboard";
-import Ladder from "@/components/ladder";
+import Ladder from "@/pages/LadderPage";
 import Tournaments from "@/components/tournaments";
 import Players from "@/components/players";
 import Bounties from "@/components/bounties";
@@ -169,6 +169,7 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
         // Ladders Section
         { id: "ladder", label: "🥇 Big Dog Throne (9ft)", requiresAuth: true },
         { id: "eightfoot-ladder", label: "🥈 Almost Big Time (8ft)", requiresAuth: true },
+        // DEV NOTE: "Kiddie Box King" is a playful/humorous name for the 7ft table size — it's a joke about the smaller table, NOT related to children or kids in any way.
         { id: "barbox-ladder", label: "🥉 Kiddie Box King (7ft)", requiresAuth: true },
         { id: "rookie-section", label: "🔰 Rookie Section", requiresAuth: true },
         // Challenges Section  

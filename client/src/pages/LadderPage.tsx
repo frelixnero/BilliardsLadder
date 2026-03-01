@@ -1,7 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Player, Match, Bounty } from '../../../shared/schema';
-import { MembershipDisplay } from '@/components/membership-display';
 import { WeightRulesDisplay } from '@/components/weight-rules-display';
 
 interface PlayerWithRank extends Player {
@@ -32,6 +31,9 @@ const LadderPage: React.FC = () => {
 
   const topPlayers = rankedPlayers.slice(0, 3);
   const activeBounties = bounties.filter(b => b.active);
+
+  const nineFootContenders = rankedPlayers.filter(p => p.rating <= 650);
+  const nineFootElite = rankedPlayers.filter(p => p.rating >= 651);
 
   if (playersLoading) {
     return (
@@ -76,12 +78,8 @@ const LadderPage: React.FC = () => {
         )}
       </div>
 
-      {/* Membership & Weight Rules */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <MembershipDisplay 
-          membershipTier="basic" 
-          onUpgrade={() => console.log('Upgrade membership')}
-        />
+      {/* Challenger Handicap */}
+      <div className="max-w-4xl mx-auto" data-testid="section-challenger-handicap-9ft">
         <WeightRulesDisplay 
           weightOwed={false}
           consecutiveLosses={0}
@@ -128,79 +126,83 @@ const LadderPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Full Ladder Table */}
-      <div className="table-dark">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left">Rank</th>
-              <th className="text-left">Player</th>
-              <th className="text-left">City</th>
-              <th className="text-left">Points</th>
-              <th className="text-left">W-L</th>
-              <th className="text-left">Streak</th>
-              <th className="text-left">Status</th>
-              <th className="text-left">Respect</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rankedPlayers.map((player) => (
-              <tr key={player.id} data-testid={`player-row-${player.id}`}>
-                <td className="font-mono text-lg font-bold">#{player.rank}</td>
-                <td className="font-bold">
-                  <div className="flex items-center gap-2">
-                    {player.rank <= 3 && (
-                      <span>{player.rank === 1 ? '👑' : player.rank === 2 ? '🥈' : '🥉'}</span>
-                    )}
-                    <span>{player.name}</span>
-                    {player.member && <span className="text-green-500 text-xs">★</span>}
+      {/* Divisions Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Tier 1: 9ft Contenders */}
+        <div className="felt-bg rounded-lg border border-green-700/30 p-6">
+          <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center gap-2">
+            🎯 Tier 1: 9ft Contenders
+          </h2>
+          <p className="text-green-500 mb-4">650 Fargo & Under</p>
+          
+          <div className="space-y-3">
+            {nineFootContenders.slice(0, 10).map((player) => (
+              <div
+                key={player.id}
+                className="flex justify-between items-center p-3 bg-black/30 rounded border border-green-800/30"
+                data-testid={`ninefoot-contender-${player.id}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 font-bold w-6">#{player.rank}</span>
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {player.name}
+                      {player.member && <span className="text-green-500 text-xs">★</span>}
+                    </div>
+                    <div className="text-xs text-green-600">{player.city} • {player.rating} Rating</div>
                   </div>
-                </td>
-                <td className="text-green-500">{player.city}</td>
-                <td className="font-bold text-xl cash-glow cash-counter">
-                  ${player.points.toLocaleString()}
-                </td>
-                <td>
-                  <span className="text-green-400">{player.wins ?? 0}</span>
-                  -
-                  <span className="text-red-400">{player.rating - (player.wins ?? 0)}</span>
-                </td>
-                <td>
-                  {(player.streak ?? 0) > 0 ? (
-                    <span className="text-green-400">🔥 {player.streak}</span>
-                  ) : (
-                    <span className="text-gray-500">-</span>
-                  )}
-                </td>
-                <td>
-                  <div className="flex flex-wrap gap-1">
-                    {player.specialStatus === 'birthday' && (
-                      <span className="badge-birthday">🎂 Birthday</span>
-                    )}
-                    {player.specialStatus === 'family_support' && (
-                      <span className="badge-support">❤️ Support</span>
-                    )}
-                    {player.specialStatus === 'free_pass' && (
-                      <span className="badge-support">🛑 Free Pass</span>
-                    )}
-                    {(player.achievements ?? []).includes('break_run_master') && (
-                      <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-1 rounded">
-                        🎯 Break & Run
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td>
-                  {(player.respectPoints ?? 0) > 0 ? (
-                    <span className="badge-respect">⭐ {player.respectPoints}</span>
-                  ) : (
-                    <span className="text-gray-600">0</span>
-                  )}
-                </td>
-              </tr>
+                </div>
+                <div className="text-right">
+                  <div className="text-green-400 font-bold">${player.points}</div>
+                  <div className="text-xs text-green-600">{player.wins ?? 0}W</div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+            {nineFootContenders.length === 0 && (
+              <div className="text-green-600 text-center py-8">
+                No 9ft contenders yet. Be the first to join!
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tier 2: 9ft Elite */}
+        <div className="felt-bg rounded-lg border border-green-700/30 p-6">
+          <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center gap-2">
+            ⭐ Tier 2: 9ft Elite
+          </h2>
+          <p className="text-green-500 mb-4">651+ Fargo</p>
+          
+          <div className="space-y-3">
+            {nineFootElite.slice(0, 10).map((player) => (
+              <div
+                key={player.id}
+                className="flex justify-between items-center p-3 bg-black/30 rounded border border-green-800/30"
+                data-testid={`ninefoot-elite-${player.id}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 font-bold w-6">#{player.rank}</span>
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {player.name}
+                      {player.member && <span className="text-green-500 text-xs">★</span>}
+                    </div>
+                    <div className="text-xs text-green-600">{player.city} • {player.rating} Rating</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-green-400 font-bold">${player.points}</div>
+                  <div className="text-xs text-green-600">{player.wins ?? 0}W</div>
+                </div>
+              </div>
+            ))}
+            {nineFootElite.length === 0 && (
+              <div className="text-green-600 text-center py-8">
+                No 9ft elite players yet. Be the first to join!
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Recent Matches */}
@@ -329,10 +331,13 @@ const LadderPage: React.FC = () => {
       </div>
 
       {/* Call to Action */}
-      <div className="text-center py-8">
-        <div className="text-green-400 text-lg mb-4">
-          Ready to climb the ladder?
-        </div>
+      <div className="text-center py-8 felt-bg rounded-lg border border-green-700/30">
+        <h2 className="text-2xl font-bold text-green-400 mb-4">
+          Ready to Claim Your Throne?
+        </h2>
+        <p className="text-green-500 mb-6">
+          The pool is locked once both sides are in. Each side puts up 100 credits.
+        </p>
         <div className="flex justify-center gap-4">
           <button 
             className="btn-gritty"

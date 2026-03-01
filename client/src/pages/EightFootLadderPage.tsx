@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { MembershipDisplay } from '@/components/membership-display';
 import { WeightRulesDisplay } from '@/components/weight-rules-display';
 import { TutoringSystem } from '@/components/tutoring-system';
 
@@ -33,27 +31,21 @@ interface Bounty {
 }
 
 export default function EightFootLadderPage() {
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-
-  // Query players data
   const { data: players = [], isLoading: playersLoading } = useQuery<Player[]>({
     queryKey: ["/api/players"],
   });
 
-  // Query bounties data  
   const { data: bounties = [] } = useQuery<Bounty[]>({
     queryKey: ["/api/bounties"],
   });
 
-  // Filter active bounties
   const activeBounties = bounties.filter((b: Bounty) => b.prize > 0);
 
-  // Simulate 8ft ladder rankings (in real implementation, this would be separate)
   const rankedPlayers = players
     .map((player, index) => ({
       ...player,
       eightFootRating: player.eightFootRating || player.rating,
-      eightFootPoints: player.eightFootPoints || Math.floor(player.points * 0.8), // Simulate 8ft points
+      eightFootPoints: player.eightFootPoints || Math.floor(player.points * 0.8),
       eightFootWins: player.eightFootWins || Math.floor(player.wins * 0.7),
       eightFootLosses: player.eightFootLosses || Math.floor((player.rating - player.wins) * 0.7),
       rank: index + 1
@@ -61,12 +53,10 @@ export default function EightFootLadderPage() {
     .sort((a, b) => (b.eightFootPoints || 0) - (a.eightFootPoints || 0))
     .map((player, index) => ({ ...player, rank: index + 1 }));
 
-  // Top 3 players for podium
   const topPlayers = rankedPlayers.slice(0, 3);
 
-  // 8ft specific divisions
-  const eightFootContenders = rankedPlayers.filter(p => (p.eightFootRating || 0) <= 650); // Tier 1  
-  const eightFootElite = rankedPlayers.filter(p => (p.eightFootRating || 0) >= 651); // Tier 2
+  const eightFootContenders = rankedPlayers.filter(p => (p.eightFootRating || 0) <= 650);
+  const eightFootElite = rankedPlayers.filter(p => (p.eightFootRating || 0) >= 651);
 
   if (playersLoading) {
     return (
@@ -86,23 +76,9 @@ export default function EightFootLadderPage() {
         <p className="text-green-500 text-xl mb-2">
           📏 8ft Tables Only
         </p>
-        <p className="text-amber-400 text-lg mb-4 font-semibold">
-          🌟 Premium Section - $50/month Add-On
-        </p>
         <p className="text-green-600 text-sm mb-8">
           Lock into the bonus pool before the break
         </p>
-        
-        {/* Premium Access Button */}
-        <div className="mb-8">
-          <button
-            onClick={() => setShowPremiumModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-black font-bold py-3 px-6 rounded-lg text-lg"
-            data-testid="button-premium-access"
-          >
-            Unlock 8ft Ladder Access - $50/month
-          </button>
-        </div>
         
         {/* Live Bounties */}
         {activeBounties.length > 0 && (
@@ -122,12 +98,8 @@ export default function EightFootLadderPage() {
         )}
       </div>
 
-      {/* Membership & Weight Rules */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
-        <MembershipDisplay 
-          membershipTier="pro" 
-          onUpgrade={() => console.log('Upgrade membership')}
-        />
+      {/* Challenger Handicap */}
+      <div className="max-w-4xl mx-auto" data-testid="section-challenger-handicap-8ft">
         <WeightRulesDisplay 
           weightOwed={true}
           consecutiveLosses={2}
@@ -178,131 +150,88 @@ export default function EightFootLadderPage() {
         ))}
       </div>
 
-      {/* 8ft Contenders Division */}
-      <div className="felt-bg rounded-lg border border-green-700/30 p-6">
-        <h2 className="text-3xl font-bold text-green-400 mb-6 text-center">
-          🎯 8ft Contenders (Rating ≤ 650)
-        </h2>
-        
-        <div className="table-dark">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left">Rank</th>
-                <th className="text-left">Player</th>
-                <th className="text-left">City</th>
-                <th className="text-left">8ft Points</th>
-                <th className="text-left">8ft W-L</th>
-                <th className="text-left">Rating</th>
-                <th className="text-left">Respect</th>
-              </tr>
-            </thead>
-            <tbody>
-              {eightFootContenders.slice(0, 10).map((player) => (
-                <tr key={player.id} data-testid={`eightfoot-contender-${player.id}`}>
-                  <td className="font-mono text-lg font-bold">#{player.rank}</td>
-                  <td className="font-bold">
-                    <div className="flex items-center gap-2">
-                      {player.rank <= 3 && (
-                        <span>{player.rank === 1 ? '👑' : player.rank === 2 ? '🥈' : '🥉'}</span>
-                      )}
-                      <span>{player.name}</span>
+      {/* Divisions Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Tier 1: 8ft Contenders */}
+        <div className="felt-bg rounded-lg border border-green-700/30 p-6">
+          <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center gap-2">
+            🎯 Tier 1: 8ft Contenders
+          </h2>
+          <p className="text-green-500 mb-4">650 Fargo & Under</p>
+          
+          <div className="space-y-3">
+            {eightFootContenders.slice(0, 10).map((player) => (
+              <div
+                key={player.id}
+                className="flex justify-between items-center p-3 bg-black/30 rounded border border-green-800/30"
+                data-testid={`eightfoot-contender-${player.id}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 font-bold w-6">#{player.rank}</span>
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {player.name}
                       {player.member && <span className="text-green-500 text-xs">★</span>}
                       {player.eightFootPassActive && (
                         <span className="text-xs bg-amber-600/20 text-amber-400 px-2 py-1 rounded">8FT</span>
                       )}
                     </div>
-                  </td>
-                  <td className="text-green-500">{player.city}</td>
-                  <td className="font-bold text-xl cash-glow cash-counter">
-                    ${(player.eightFootPoints || 0).toLocaleString()}
-                  </td>
-                  <td>
-                    <span className="text-green-400">{player.eightFootWins}</span>
-                    -
-                    <span className="text-red-400">{player.eightFootLosses}</span>
-                  </td>
-                  <td className="text-blue-400">{player.eightFootRating}</td>
-                  <td>
-                    {player.respectPoints > 0 && (
-                      <span className="badge-respect">{player.respectPoints}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {eightFootContenders.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-green-600">
-                    No 8ft contenders yet. Be the first to join!
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <div className="text-xs text-green-600">{player.city} • {player.eightFootRating} Rating</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-green-400 font-bold">${(player.eightFootPoints || 0).toLocaleString()}</div>
+                  <div className="text-xs text-green-600">{player.eightFootWins}W-{player.eightFootLosses}L</div>
+                </div>
+              </div>
+            ))}
+            {eightFootContenders.length === 0 && (
+              <div className="text-green-600 text-center py-8">
+                No 8ft contenders yet. Be the first to join!
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* 8ft Elite Division */}
-      <div className="felt-bg rounded-lg border border-green-700/30 p-6">
-        <h2 className="text-3xl font-bold text-green-400 mb-6 text-center">
-          👑 8ft Elite (Rating ≥ 651)
-        </h2>
-        
-        <div className="table-dark">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left">Rank</th>
-                <th className="text-left">Player</th>
-                <th className="text-left">City</th>
-                <th className="text-left">8ft Points</th>
-                <th className="text-left">8ft W-L</th>
-                <th className="text-left">Rating</th>
-                <th className="text-left">Respect</th>
-              </tr>
-            </thead>
-            <tbody>
-              {eightFootElite.slice(0, 10).map((player) => (
-                <tr key={player.id} data-testid={`eightfoot-elite-${player.id}`}>
-                  <td className="font-mono text-lg font-bold">#{player.rank}</td>
-                  <td className="font-bold">
-                    <div className="flex items-center gap-2">
-                      {player.rank <= 3 && (
-                        <span>{player.rank === 1 ? '👑' : player.rank === 2 ? '🥈' : '🥉'}</span>
-                      )}
-                      <span>{player.name}</span>
+        {/* Tier 2: 8ft Elite */}
+        <div className="felt-bg rounded-lg border border-green-700/30 p-6">
+          <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center gap-2">
+            ⭐ Tier 2: 8ft Elite
+          </h2>
+          <p className="text-green-500 mb-4">651+ Fargo</p>
+          
+          <div className="space-y-3">
+            {eightFootElite.slice(0, 10).map((player) => (
+              <div
+                key={player.id}
+                className="flex justify-between items-center p-3 bg-black/30 rounded border border-green-800/30"
+                data-testid={`eightfoot-elite-${player.id}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 font-bold w-6">#{player.rank}</span>
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {player.name}
                       {player.member && <span className="text-green-500 text-xs">★</span>}
                       {player.eightFootPassActive && (
                         <span className="text-xs bg-amber-600/20 text-amber-400 px-2 py-1 rounded">8FT</span>
                       )}
                     </div>
-                  </td>
-                  <td className="text-green-500">{player.city}</td>
-                  <td className="font-bold text-xl cash-glow cash-counter">
-                    ${(player.eightFootPoints || 0).toLocaleString()}
-                  </td>
-                  <td>
-                    <span className="text-green-400">{player.eightFootWins}</span>
-                    -
-                    <span className="text-red-400">{player.eightFootLosses}</span>
-                  </td>
-                  <td className="text-blue-400">{player.eightFootRating}</td>
-                  <td>
-                    {player.respectPoints > 0 && (
-                      <span className="badge-respect">{player.respectPoints}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {eightFootElite.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-green-600">
-                    No 8ft elite players yet. Be the first to join!
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <div className="text-xs text-green-600">{player.city} • {player.eightFootRating} Rating</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-green-400 font-bold">${(player.eightFootPoints || 0).toLocaleString()}</div>
+                  <div className="text-xs text-green-600">{player.eightFootWins}W-{player.eightFootLosses}L</div>
+                </div>
+              </div>
+            ))}
+            {eightFootElite.length === 0 && (
+              <div className="text-green-600 text-center py-8">
+                No 8ft elite players yet. Be the first to join!
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -370,76 +299,29 @@ export default function EightFootLadderPage() {
         </div>
       </div>
 
-      {/* Premium Features */}
-      <div className="felt-bg rounded-lg border border-amber-700/30 p-6">
-        <h2 className="text-3xl font-bold text-amber-400 mb-6 text-center">
-          🌟 Premium 8ft Ladder Features
+      {/* Call to Action */}
+      <div className="text-center py-8 felt-bg rounded-lg border border-green-700/30">
+        <h2 className="text-2xl font-bold text-green-400 mb-4">
+          Ready to Claim Your Throne?
         </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-black/30 rounded border border-amber-800/30 p-4">
-            <h3 className="text-amber-400 font-bold mb-2">📊 Dedicated 8ft Rankings</h3>
-            <p className="text-green-600 text-sm">Separate ratings and standings for 8ft play only</p>
-          </div>
-          
-          <div className="bg-black/30 rounded border border-amber-800/30 p-4">
-            <h3 className="text-amber-400 font-bold mb-2">🏆 8ft Championships</h3>
-            <p className="text-green-600 text-sm">Exclusive tournaments for 8ft table specialists</p>
-          </div>
-          
-          <div className="bg-black/30 rounded border border-amber-800/30 p-4">
-            <h3 className="text-amber-400 font-bold mb-2">💰 Enhanced Payouts</h3>
-            <p className="text-green-600 text-sm">Higher prize pools for 8ft ladder matches</p>
-          </div>
-          
-          <div className="bg-black/30 rounded border border-amber-800/30 p-4">
-            <h3 className="text-amber-400 font-bold mb-2">📈 Advanced Stats</h3>
-            <p className="text-green-600 text-sm">Detailed analytics for 8ft table performance</p>
-          </div>
-        </div>
-        
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setShowPremiumModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-black font-bold py-2 px-4 rounded"
-            data-testid="button-premium-upgrade"
+        <p className="text-green-500 mb-6">
+          The pool is locked once both sides are in. Each side puts up 100 credits.
+        </p>
+        <div className="flex justify-center gap-4">
+          <button 
+            className="bg-green-600 hover:bg-green-700 text-black font-bold px-6 py-3 rounded transition-colors"
+            data-testid="button-8ft-lock-in"
           >
-            Upgrade to 8ft Premium - $50/month
+            Lock Into Action
+          </button>
+          <button 
+            className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-6 py-3 rounded transition-colors"
+            data-testid="button-8ft-view-pools"
+          >
+            View Match Pools
           </button>
         </div>
       </div>
-
-      {/* Premium Access Modal */}
-      {showPremiumModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-black border border-amber-600/50 rounded-lg p-6 max-w-md mx-4">
-            <h3 className="text-2xl font-bold text-amber-400 mb-4">8ft Ladder Premium</h3>
-            <p className="text-green-600 mb-4">
-              Join the exclusive 8ft ladder with dedicated rankings, championships, and enhanced features.
-            </p>
-            <div className="text-amber-400 text-3xl font-bold mb-4">$50/month</div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowPremiumModal(false)}
-                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded"
-                data-testid="button-cancel-premium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  // TODO: Integrate with Stripe for premium subscription
-                  setShowPremiumModal(false);
-                }}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-black font-bold py-2 px-4 rounded"
-                data-testid="button-confirm-premium"
-              >
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

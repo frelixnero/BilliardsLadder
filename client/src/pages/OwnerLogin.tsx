@@ -185,16 +185,12 @@ export default function OwnerLogin() {
           </Form>
 
           <div className="text-center space-y-2">
-            <Link href="/forgot-password">
-              <a className="text-sm text-amber-400 hover:text-amber-300 hover:underline" data-testid="link-forgot-password">
-                Forgot Password?
-              </a>
+            <Link href="/forgot-password" className="text-sm text-amber-400 hover:text-amber-300 hover:underline" data-testid="link-forgot-password">
+              Forgot Password?
             </Link>
             <div className="pt-2">
-              <Link href="/login">
-                <a className="text-sm text-gray-400 hover:text-white hover:underline" data-testid="link-general-login">
-                  Back to General Login
-                </a>
+              <Link href="/login" className="text-sm text-gray-400 hover:text-white hover:underline" data-testid="link-general-login">
+                Back to General Login
               </Link>
             </div>
           </div>

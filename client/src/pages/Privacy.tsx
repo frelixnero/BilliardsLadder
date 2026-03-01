@@ -38,7 +38,7 @@ export default function Privacy() {
                 <h2 className="text-2xl font-bold text-neon-green mb-4">Privacy Requests</h2>
                 <p>
                   For privacy-related requests, data access, or deletion requests, 
-                  please contact us at privacy@tricityladder.com
+                  please contact us at privacy@actionladder.com
                 </p>
               </section>
 

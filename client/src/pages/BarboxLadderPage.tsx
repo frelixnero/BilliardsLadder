@@ -1,7 +1,11 @@
+// DEV NOTE: "Kiddie Box King" is a humorous/playful name for the 7ft table division.
+// It's a tongue-in-cheek joke about the smaller table size — nothing more.
+// It has NO relationship to children, kids, or any children's subscription tier.
+// The name is purely branding personality for the 7ft barbox ladder.
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Player, Match, Bounty } from '../../../shared/schema';
-import { MembershipDisplay } from '@/components/membership-display';
 import { WeightRulesDisplay } from '@/components/weight-rules-display';
 
 interface PlayerWithRank extends Player {
@@ -30,9 +34,8 @@ const BarboxLadderPage: React.FC = () => {
   const topPlayers = rankedPlayers.slice(0, 3);
   const activeBounties = bounties.filter(b => b.active);
   
-  // Barbox specific divisions
-  const barboxContenders = rankedPlayers.filter(p => p.rating <= 599); // Tier 1
-  const barboxElite = rankedPlayers.filter(p => p.rating >= 600); // Tier 2
+  const barboxContenders = rankedPlayers.filter(p => p.rating <= 599);
+  const barboxElite = rankedPlayers.filter(p => p.rating >= 600);
 
   if (playersLoading) {
     return (
@@ -74,12 +77,8 @@ const BarboxLadderPage: React.FC = () => {
         )}
       </div>
 
-      {/* Membership & Weight Rules */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
-        <MembershipDisplay 
-          membershipTier="none" 
-          onUpgrade={() => console.log('Get membership')}
-        />
+      {/* Challenger Handicap */}
+      <div className="max-w-4xl mx-auto" data-testid="section-challenger-handicap-7ft">
         <WeightRulesDisplay 
           weightOwed={false}
           consecutiveLosses={3}
@@ -250,19 +249,6 @@ const BarboxLadderPage: React.FC = () => {
             
             <div className="bg-black/30 rounded border border-green-800/30 p-4">
               <h3 className="text-green-400 font-bold mb-3 flex items-center gap-2">
-                💳 Rookie Pass Benefits ($20/month)
-              </h3>
-              <ul className="text-green-500 text-sm space-y-2">
-                <li>• Free tournament entries</li>
-                <li>• Bonus points for wins</li>
-                <li>• Exclusive rookie events</li>
-                <li>• Priority table booking</li>
-                <li>• Mentorship program access</li>
-              </ul>
-            </div>
-            
-            <div className="bg-black/30 rounded border border-green-800/30 p-4">
-              <h3 className="text-green-400 font-bold mb-3 flex items-center gap-2">
                 🎯 Rookie Barbox Games
               </h3>
               <ul className="text-green-500 text-sm space-y-2">
@@ -278,13 +264,16 @@ const BarboxLadderPage: React.FC = () => {
         {/* Rookie Quick Actions */}
         <div className="mt-6 text-center">
           <div className="flex justify-center gap-4 flex-wrap">
-            <button className="bg-green-600 hover:bg-green-700 text-black font-bold px-4 py-2 rounded text-sm transition-colors">
+            <button 
+              className="bg-green-600 hover:bg-green-700 text-black font-bold px-4 py-2 rounded text-sm transition-colors"
+              data-testid="button-join-rookie-barbox"
+            >
               Join Rookie Barbox
             </button>
-            <button className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-4 py-2 rounded text-sm transition-colors">
-              Get Rookie Pass
-            </button>
-            <button className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-4 py-2 rounded text-sm transition-colors">
+            <button 
+              className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-4 py-2 rounded text-sm transition-colors"
+              data-testid="button-schedule-barbox-match"
+            >
               Schedule Match
             </button>
           </div>
@@ -375,10 +364,16 @@ const BarboxLadderPage: React.FC = () => {
           The pool is locked once both sides are in. Each side puts up 100 credits.
         </p>
         <div className="flex justify-center gap-4">
-          <button className="bg-green-600 hover:bg-green-700 text-black font-bold px-6 py-3 rounded transition-colors">
+          <button 
+            className="bg-green-600 hover:bg-green-700 text-black font-bold px-6 py-3 rounded transition-colors"
+            data-testid="button-barbox-lock-in"
+          >
             Lock Into Action
           </button>
-          <button className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-6 py-3 rounded transition-colors">
+          <button 
+            className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-6 py-3 rounded transition-colors"
+            data-testid="button-barbox-view-pools"
+          >
             View Match Pools
           </button>
         </div>
