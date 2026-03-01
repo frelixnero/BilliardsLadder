@@ -35,7 +35,7 @@ The system is built on a modern web stack designed for performance, scalability,
 - **Special Events**: Supports birthday bonuses, charity nights, and player support programs (e.g., "Player in Need Rule").
 - **Respect Points System**: Community recognition for sportsmanship.
 - **Side Betting System**: Credit-based wagering with closed-loop funds.
-- **Financial Features**: Entry ranges from $60 to $500,000 for high-stakes players. League fees are 5% for members, 15% for non-members. Membership tiers: Rookie ($25/month, no challenger fee), Standard ($35/month, $60 challenger fee per match), Premium ($45/month, $60 challenger fee per match). Player Career Dashboard with service marketplace for coaching, exhibitions, and content subscriptions.
+- **Financial Features**: All tiers are paid — no free membership. Membership tiers: Rookie ($25/month, no challenger fee), Standard ($35/month, $60+ up to $500 challenger fee per match), Premium ($45/month, $60+ up to $1,000 challenger fee with approval). Player Career Dashboard with service marketplace for coaching, exhibitions, and content subscriptions. League fees are 5% for members, 15% for non-members.
 - **Automated Rewards**: The AI Coach system includes automated monthly rewards for top trainers, offering Stripe subscription discounts.
 
 ## External Dependencies

@@ -22,9 +22,9 @@ export function getPlayerSubscriptionTier(tier: string) {
         monthlySavings: 1200, // $12/month savings
         yearlySavings: 18500, // $185/year savings
         challengerFee: 0,
+        maxChallengerFee: 0,
         perks: [
           "Access to all ladder divisions",
-          "No challenger fee",
           "Challenge match system",
           "Basic tournament entries",
           "Match history tracking",
@@ -47,9 +47,10 @@ export function getPlayerSubscriptionTier(tier: string) {
         monthlySavings: 200, // $2/month savings
         yearlySavings: 2300, // $23/year savings
         challengerFee: 6000,
+        maxChallengerFee: 50000,
         perks: [
           "Everything in Rookie",
-          "$60 challenger fee per match",
+          "$60+ up to $500 challenger fee per match",
           "Premium tournament access",
           "Advanced analytics & insights",
           "Live stream priority placement",
@@ -73,9 +74,10 @@ export function getPlayerSubscriptionTier(tier: string) {
         monthlySavings: -800, // $8/month more but saves $40+ through perks
         yearlySavings: -1900, // $19/year more but saves $400+ annually through perks
         challengerFee: 6000,
+        maxChallengerFee: 100000,
         perks: [
           "Everything in Standard",
-          "$60 challenger fee per match",
+          "$60+ up to $1,000 challenger fee per match (with approval)",
           "VIP tournament seeding",
           "Personal performance coaching",
           "Fan tip collection system",

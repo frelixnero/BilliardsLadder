@@ -15,8 +15,9 @@ export const MEMBERSHIP_TIERS = {
       price: config.membershipPricing.rookie,
       commissionRate: config.commissionRates.rookie,
       challengerFee: 0,
-      perks: ["entry_tier", "no_challenger_fee", "3_4_matches_included", "local_ladder_access"],
-      description: "Entry tier - No challenger fee! 3-4 matches included",
+      maxChallengerFee: 0,
+      perks: ["entry_tier", "3_4_matches_included", "local_ladder_access"],
+      description: "Entry tier - Half the cost of APA! 3-4 matches included",
     };
   },
   get STANDARD() {
@@ -26,8 +27,9 @@ export const MEMBERSHIP_TIERS = {
       price: config.membershipPricing.standard,
       commissionRate: config.commissionRates.standard,
       challengerFee: 6000,
-      perks: ["$60_challenger_fee_per_match", "unlimited_local_ladder", "priority_matching", "weekly_bonus_eligible"],
-      description: "Unlimited local ladder with $60 challenger fee per match",
+      maxChallengerFee: 50000,
+      perks: ["$60+_up_to_$500_challenger_fee", "unlimited_local_ladder", "priority_matching", "weekly_bonus_eligible"],
+      description: "Unlimited local ladder with $60+ up to $500 challenger fee per match",
     };
   },
   get PREMIUM() {
@@ -37,8 +39,9 @@ export const MEMBERSHIP_TIERS = {
       price: config.membershipPricing.premium,
       commissionRate: config.commissionRates.premium,
       challengerFee: 6000,
-      perks: ["$60_challenger_fee_per_match", "unlimited_all_ladders", "hall_city_state_access", "stream_perks", "priority_support"],
-      description: "All ladders + stream perks with $60 challenger fee per match",
+      maxChallengerFee: 100000,
+      perks: ["$60+_up_to_$1000_challenger_fee_(with_approval)", "unlimited_all_ladders", "hall_city_state_access", "stream_perks", "priority_support"],
+      description: "All ladders + stream perks with $60+ up to $1,000 challenger fee (with approval)",
     };
   },
 } as const;
