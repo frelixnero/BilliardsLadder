@@ -135,6 +135,10 @@ if (process.env.NODE_ENV === "development") {
 
   const server = await registerRoutes(app);
 
+  // 404 handler for /api — must be BEFORE Vite so unknown API routes
+  // get a JSON 404 instead of being caught by Vite's SPA fallback
+  app.use('/api', notFoundHandler);
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -143,9 +147,6 @@ if (process.env.NODE_ENV === "development") {
   } else {
     serveStatic(app);
   }
-
-  // 404 handler — only catches unknown /api routes (Vite handles frontend)
-  app.use('/api', notFoundHandler);
 
   // Global error handler — must be LAST middleware (4-arg signature required)
   app.use(errorHandler);
