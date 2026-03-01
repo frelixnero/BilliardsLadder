@@ -47,6 +47,7 @@ export function getPricingTiers() {
         price: config.price,
         monthlyPrice: config.price / 100,
         commissionRate: config.commissionRate / 100,
+        challengerFee: config.challengerFee,
         perks: config.perks,
         description: config.description,
       }));

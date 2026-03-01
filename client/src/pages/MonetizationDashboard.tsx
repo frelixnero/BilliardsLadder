@@ -67,7 +67,7 @@ export default function MonetizationDashboard() {
       // Load membership tiers
       const tierResponse = await fetch("/api/pricing/tiers");
       const tierData = await tierResponse.json();
-      setTiers(tierData);
+      setTiers(tierData.tiers || []);
 
       // NEW PLAYER-FRIENDLY DISTRIBUTION MODEL
       setEarnings({

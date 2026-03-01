@@ -14,6 +14,7 @@ interface SubscriptionTier {
   traditionalLeagueCost: number;
   monthlySavings: number;
   yearlySavings: number;
+  challengerFee: number;
   perks: string[];
   commissionRate: number;
   description: string;
@@ -328,6 +329,10 @@ export function PlayerSubscriptionTiers({ userId, currentUserRole }: PlayerSubsc
                   <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
                     <DollarSign className="w-4 h-4" />
                     {tier.commissionRate / 100}% commission rate
+                  </div>
+                  <div className={`flex items-center gap-2 text-sm font-medium ${tier.challengerFee === 0 ? "text-green-400" : "text-yellow-400"}`}>
+                    <DollarSign className="w-4 h-4" />
+                    {tier.challengerFee === 0 ? "No challenger fee" : `$${(tier.challengerFee / 100).toFixed(0)} challenger fee per match`}
                   </div>
                 </div>
 

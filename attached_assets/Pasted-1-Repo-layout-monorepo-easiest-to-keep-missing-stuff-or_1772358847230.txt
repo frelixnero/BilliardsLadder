@@ -1,0 +1,245 @@
+1) Repo layout (monorepo = easiest to keep “missing stuff” organized)
+app/
+  README.md
+  .env.example
+  package.json
+  pnpm-workspace.yaml              # or npm/yarn workspaces
+  tsconfig.base.json
+  eslint.config.js
+  .prettierrc
+  .gitignore
+
+  docs/
+    architecture.md                # “how the whole app works”
+    api-contract.yaml              # endpoints + request/response schemas
+    data-model.md                  # tables + indexes + constraints
+    state-machines.md              # payments, matchmaking, etc.
+    role-matrix.md                 # who can do what
+    runbook.md                     # how to deploy, debug, rollback
+    troubleshooting.md             # common errors + fixes
+
+  packages/
+    shared/                        # types + utilities used everywhere
+      src/
+        types/
+        validators/
+        constants/
+      package.json
+      tsconfig.json
+
+    api/                           # backend service
+      src/
+        main.ts                    # bootstrap server
+        config/                    # env parsing + config validation
+        routes/                    # route registration
+        controllers/               # HTTP in/out (thin)
+        services/                  # business logic (thick)
+        domain/                    # core entities + rules (no HTTP/DB here)
+        repos/                     # database access layer
+        integrations/              # Stripe, email, etc.
+        middleware/                # auth, errors, logging
+        jobs/                      # background tasks
+        db/
+          migrations/
+          schema.prisma            # or SQL schema + migrations
+          seed.ts
+        lib/                       # helpers (logger, time, id, crypto)
+        tests/
+      package.json
+      tsconfig.json
+
+    web/                           # frontend (Next/Vite/etc.)
+      src/
+        app/ or pages/
+        components/
+        features/
+        api-client/                # typed client talking to API
+        state/
+        styles/
+      package.json
+      tsconfig.json
+
+  infra/
+    docker-compose.yml
+    Dockerfile.api
+    Dockerfile.web
+    fly.toml / render.yaml / etc
+
+Why this helps AI fix errors: the app becomes predictable. Missing middleware? It’s in api/src/middleware. Missing route? routes/. Missing env? config/.
+
+2) Non-negotiable “missing pieces” checklist (the stuff apps break without)
+Config + Env (90% of Replit/Deploy bugs)
+
+api/src/config/env.ts that validates env vars at startup
+
+.env.example listing every env var your app expects
+
+Fail fast with a clear message if something is missing
+
+Global error handling (so errors are actionable)
+
+api/src/middleware/errorHandler.ts
+
+Always return consistent error shape:
+
+code, message, requestId, optional details
+
+Request validation (stops bad inputs from crashing stuff)
+
+Zod/Yup validators in shared/src/validators
+
+Controllers only accept validated input
+
+Auth + Authorization (always separated)
+
+Auth = “who are you?” (JWT/session)
+
+AuthZ = “can you do this?” (role matrix + permission checks)
+
+Logging + tracing
+
+Structured logs with requestId on every request
+
+Log where and why (service, function, userId)
+
+DB migrations (not “I changed schema manually”)
+
+db/migrations/ and a clear command: pnpm db:migrate
+
+Seed script for dev data
+
+Tests (minimum viable)
+
+Unit tests for services (business rules)
+
+Integration tests for key endpoints (auth + one core flow)
+
+3) The “AI Fix Kit” files (these make AI actually fix instead of guessing)
+
+Put these in docs/:
+
+docs/architecture.md
+
+Must include:
+
+app overview
+
+modules/features list
+
+data flow diagram text (request → controller → service → repo)
+
+what is “source of truth” (DB + state machines)
+
+docs/api-contract.yaml
+
+Every endpoint
+
+request/response schema
+
+error responses
+
+docs/data-model.md
+
+tables, indexes, constraints
+
+relationships
+
+what fields are required vs optional
+
+docs/state-machines.md
+
+Example sections:
+
+user onboarding state
+
+payment state (created → pending → paid → refunded → disputed)
+
+any “challenge/match” state
+
+docs/role-matrix.md
+
+roles: user, admin, moderator, etc.
+
+permissions: create match, accept, cancel, payout, refund…
+
+When these exist, AI doesn’t “invent rules.” It follows your rules.
+
+4) Controller / Service / Repo pattern (the core structure)
+
+Controller (thin):
+
+read request
+
+validate input
+
+call service
+
+return response
+
+Service (thick):
+
+enforce business rules
+
+handle state transitions
+
+call repo(s) + integrations
+
+Repo (pure data):
+
+DB queries only
+
+no business logic
+
+This separation is what stops “missing a lot” problems, because each piece has a clear job.
+
+5) Error-proof “definition of done” (so you know what’s missing)
+
+A feature is “done” only if it has:
+
+API endpoint + schema in api-contract.yaml
+
+Validation in shared/validators
+
+Service logic + tests
+
+DB migration (if it touches data)
+
+Frontend integration (if needed)
+
+Logging + proper error codes
+
+Permission check (role matrix)
+
+If any of those is missing, AI will usually surface it fast.
+
+6) Copy/paste prompt template to make AI fix errors accurately
+
+Use this every time you ask AI to fix something:
+
+Prompt
+
+Goal: what should happen
+
+Actual: what happens instead
+
+Steps to reproduce: 1…2…3…
+
+Logs/stack trace: (paste full error)
+
+Files involved: (paths)
+
+Constraints: (don’t change API contract, keep DB schema, etc.)
+
+Expected response shape: (show JSON)
+
+That forces the AI to act like a debugger, not a guesser.
+
+7) If your current app “seems missing a lot,” it’s usually one of these
+
+No env validation → half the features silently fail in deploy
+
+No global error handler → you get random 500s with no clues
+
+No contract docs → AI (and devs) keep building mismatched endpoints
+
+Business logic mixed into routes/DB → changes break everything
