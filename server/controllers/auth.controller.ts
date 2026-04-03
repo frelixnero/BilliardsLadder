@@ -329,7 +329,6 @@ export async function changePassword(req: Request, res: Response) {
 // Alias for route naming consistency
 export const createOperator = signupOperator;
 
-// Replit Auth - Get current user (OIDC specific)
 export async function authMe(req: Request, res: Response) {
   try {
     if (!req.isAuthenticated()) {
@@ -337,27 +336,30 @@ export async function authMe(req: Request, res: Response) {
     }
     
     const user = req.user as any;
+    let dbUser;
+
     if (user?.claims?.sub) {
-      const dbUser = await storage.getUser(user.claims.sub);
-      if (dbUser) {
-        res.json({
-          id: dbUser.id,
-          email: dbUser.email,
-          name: dbUser.name,
-          globalRole: dbUser.globalRole,
-          hallName: dbUser.hallName,
-          city: dbUser.city,
-          state: dbUser.state,
-          subscriptionTier: dbUser.subscriptionTier,
-          accountStatus: dbUser.accountStatus,
-          onboardingComplete: dbUser.onboardingComplete
-        });
-      } else {
-        res.status(404).json({ message: "User not found" });
-      }
-    } else {
-      res.status(401).json({ message: "Invalid user session" });
+      dbUser = await storage.getUser(user.claims.sub);
+    } else if (user?.id) {
+      dbUser = await storage.getUser(user.id);
     }
+
+    if (!dbUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      globalRole: dbUser.globalRole,
+      hallName: dbUser.hallName,
+      city: dbUser.city,
+      state: dbUser.state,
+      subscriptionTier: dbUser.subscriptionTier,
+      accountStatus: dbUser.accountStatus,
+      onboardingComplete: dbUser.onboardingComplete
+    });
   } catch (error) {
     console.error("Auth me error:", error);
     res.status(500).json({ message: "Server error" });

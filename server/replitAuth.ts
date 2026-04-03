@@ -181,7 +181,15 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (user.authType === "password") {
+    return next();
+  }
+
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -210,12 +218,17 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 export const requireOwner: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
   
-  if (!req.isAuthenticated() || !user.claims?.sub) {
+  if (!req.isAuthenticated() || !user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  const userId = user.claims?.sub || user.id;
+  if (!userId) {
     return res.status(401).json({ message: "Authentication required" });
   }
 
   try {
-    const dbUser = await storage.getUser(user.claims.sub);
+    const dbUser = await storage.getUser(userId);
     if (!dbUser || dbUser.globalRole !== "OWNER") {
       return res.status(403).json({ message: "Owner access required" });
     }
@@ -229,12 +242,17 @@ export const requireOwner: RequestHandler = async (req, res, next) => {
 export const requireStaffOrOwner: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
   
-  if (!req.isAuthenticated() || !user.claims?.sub) {
+  if (!req.isAuthenticated() || !user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  const userId = user.claims?.sub || user.id;
+  if (!userId) {
     return res.status(401).json({ message: "Authentication required" });
   }
 
   try {
-    const dbUser = await storage.getUser(user.claims.sub);
+    const dbUser = await storage.getUser(userId);
     if (!dbUser || !["STAFF", "OWNER"].includes(dbUser.globalRole || "")) {
       return res.status(403).json({ message: "Staff or Owner access required" });
     }
