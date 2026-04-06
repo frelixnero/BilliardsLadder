@@ -5616,16 +5616,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: any): Promise<any> {
-    const results = await db.insert(usersTable).values(user).returning();
+    const safeUser = this.sanitizeUserFields(user);
+    const results = await db.insert(usersTable).values(safeUser).returning();
     return results[0];
   }
 
   async updateUser(id: string, updates: any): Promise<any | undefined> {
-    const results = await db.update(usersTable).set(updates).where(eq(usersTable.id, id)).returning();
+    const safeUpdates = this.sanitizeUserFields(updates);
+    const results = await db.update(usersTable).set(safeUpdates).where(eq(usersTable.id, id)).returning();
     return results[0];
   }
 
   async upsertUser(userData: any): Promise<any> {
+    if (!userData.email) {
+      throw new Error("Email is required to create or update a user");
+    }
     const existingUser = await this.getUserByEmail(userData.email);
     if (existingUser) {
       return await this.updateUser(existingUser.id, userData) || existingUser;
@@ -5637,6 +5642,23 @@ export class DatabaseStorage implements IStorage {
         ...userData
       });
     }
+  }
+
+  private sanitizeUserFields(data: any): any {
+    const validColumns = [
+      "id", "email", "name", "passwordHash", "twoFactorEnabled", "twoFactorSecret",
+      "phoneNumber", "lastLoginAt", "loginAttempts", "lockedUntil", "globalRole",
+      "role", "profileComplete", "onboardingComplete", "accountStatus",
+      "stripeCustomerId", "stripeConnectId", "payoutShareBps", "hallName",
+      "city", "state", "subscriptionTier", "trusteeId", "createdAt", "updatedAt"
+    ];
+    const sanitized: any = {};
+    for (const key of validColumns) {
+      if (key in data && data[key] !== undefined) {
+        sanitized[key] = data[key];
+      }
+    }
+    return sanitized;
   }
 
   async getUserByStripeConnectId(stripeConnectId: string): Promise<any | undefined> {
