@@ -258,11 +258,10 @@ async function runE2ECheckoutTest() {
             .insert(players)
             .values({
                 id: `test-player-${Date.now()}`,
-                user_id: userId,
-                display_name: `Test Player ${Date.now()}`,
+                userId: userId,
+                name: `Test Player ${Date.now()}`,
                 member: false,
-                skill_level: 'beginner',
-                created_at: new Date(),
+                createdAt: new Date(),
             })
             .returning();
 
@@ -302,11 +301,10 @@ async function runE2ECheckoutTest() {
         const recordedEvent = await db
             .insert(webhookEvents)
             .values({
-                id: webhookEvent.id,
-                type: webhookEvent.type,
-                payload: webhookEvent as any,
-                processed: false,
-                created_at: new Date(),
+                stripeEventId: webhookEvent.id,
+                eventType: webhookEvent.type,
+                payloadJson: JSON.stringify(webhookEvent),
+                processedAt: new Date(),
             })
             .returning();
 
@@ -321,17 +319,14 @@ async function runE2ECheckoutTest() {
         const membershipRecord = await db
             .insert(membershipSubscriptions)
             .values({
-                id: `msub_test_${Date.now()}`,
-                player_id: playerId,
-                stripe_subscription_id: webhookEvent.data.object.id,
-                stripe_customer_id: webhookEvent.data.object.customer,
+                playerId: playerId,
+                stripeSubscriptionId: webhookEvent.data.object.id,
+                stripeCustomerId: webhookEvent.data.object.customer,
                 tier: 'basic',
                 status: 'active',
-                price_id: 'price_1THmi0DvTG8XWAaKGZwVO8WR',
-                amount_cents: 2500,
-                interval: 'month',
-                current_period_end: new Date(webhookEvent.data.object.current_period_end * 1000),
-                created_at: new Date(),
+                monthlyPrice: 2500,
+                currentPeriodEnd: new Date(webhookEvent.data.object.current_period_end * 1000),
+                createdAt: new Date(),
             })
             .returning();
 
@@ -366,11 +361,11 @@ async function runE2ECheckoutTest() {
         const verifyMembership = await db
             .select()
             .from(membershipSubscriptions)
-            .where(eq(membershipSubscriptions.player_id, playerId));
+            .where(eq(membershipSubscriptions.playerId, playerId));
         const verifyEvent = await db
             .select()
             .from(webhookEvents)
-            .where(eq(webhookEvents.id, webhookEvent.id));
+            .where(eq(webhookEvents.stripeEventId, webhookEvent.id));
 
         if (verifyPlayer.length && verifyMembership.length && verifyEvent.length) {
             await addResult(
@@ -385,8 +380,8 @@ async function runE2ECheckoutTest() {
         }
 
         // Cleanup
-        await db.delete(membershipSubscriptions).where(eq(membershipSubscriptions.player_id, playerId));
-        await db.delete(webhookEvents).where(eq(webhookEvents.id, webhookEvent.id));
+        await db.delete(membershipSubscriptions).where(eq(membershipSubscriptions.playerId, playerId));
+        await db.delete(webhookEvents).where(eq(webhookEvents.stripeEventId, webhookEvent.id));
         await db.delete(players).where(eq(players.id, playerId));
         await db.delete(users).where(eq(users.id, userId));
 
