@@ -31,53 +31,53 @@ const PaymentsPage: React.FC = () => {
 
   const paymentOptions = [
     { 
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGPl', // Replace with actual price IDs from Stripe
-      amount: '$25',
-      description: 'Basic Entry Fee',
-      mode: 'payment',
-      metadata: { type: 'entry_fee', tier: 'basic' }
+      priceId: 'price_1THmhwDvTG8XWAaKP5IdXAic',
+      amount: '$20/month',
+      description: 'Rookie Membership',
+      mode: 'subscription',
+      metadata: { type: 'membership', tier: 'rookie' }
     },
     {
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGP2', 
-      amount: '$50',
-      description: 'Tournament Entry',
-      mode: 'payment',
-      metadata: { type: 'tournament', tier: 'standard' }
-    },
-    {
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGP3',
-      amount: '$100', 
-      description: 'Premium Package',
-      mode: 'payment',
-      metadata: { type: 'package', tier: 'premium' }
-    },
-    {
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGP4',
-      amount: '$200',
-      description: 'High Stakes Entry',
-      mode: 'payment',
-      metadata: { type: 'high_stakes', tier: 'pro' }
-    },
-    {
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGP5',
-      amount: '$500',
-      description: 'VIP Package',
-      mode: 'payment',
-      metadata: { type: 'vip', tier: 'elite' }
-    },
-    {
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGP6',
+      priceId: 'price_1THmi0DvTG8XWAaKGZwVO8WR',
       amount: '$25/month',
       description: 'Basic Membership',
       mode: 'subscription',
       metadata: { type: 'membership', tier: 'basic' }
     },
     {
-      priceId: 'price_1QZtpFJKQVJqL5dGYJhCyGP7',
-      amount: '$45/month',
+      priceId: 'price_1THmi2DvTG8XWAaKpyx6VNyR',
+      amount: '$60/month',
       description: 'Pro Membership',
       mode: 'subscription',
       metadata: { type: 'membership', tier: 'pro' }
+    },
+    {
+      priceId: 'price_1THmiLDvTG8XWAaKhXE4JvZq',
+      amount: '$199/month',
+      description: 'Small Hall Operator',
+      mode: 'subscription',
+      metadata: { type: 'operator', tier: 'small' }
+    },
+    {
+      priceId: 'price_1THmiPDvTG8XWAaKkeveuEqq',
+      amount: '$299/month',
+      description: 'Medium Hall Operator',
+      mode: 'subscription',
+      metadata: { type: 'operator', tier: 'medium' }
+    },
+    {
+      priceId: 'price_1THmiRDvTG8XWAaK39Gg3Nb9',
+      amount: '$499/month',
+      description: 'Large Hall Operator',
+      mode: 'subscription',
+      metadata: { type: 'operator', tier: 'large' }
+    },
+    {
+      priceId: 'price_1THmiUDvTG8XWAaKa43Y9Bm9',
+      amount: '$799/month',
+      description: 'Mega Hall Operator',
+      mode: 'subscription',
+      metadata: { type: 'operator', tier: 'mega' }
     }
   ];
 

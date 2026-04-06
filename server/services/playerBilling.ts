@@ -30,8 +30,8 @@ export function getPlayerSubscriptionTier(tier: string) {
         name: "Rookie",
         monthlyPrice: 2500, // $25/month
         yearlyPrice: 25500, // $255/year (save $45)
-        priceId: process.env.PLAYER_ROOKIE_MONTHLY_PRICE_ID || "price_rookie_monthly",
-        yearlyPriceId: process.env.PLAYER_ROOKIE_YEARLY_PRICE_ID || "price_rookie_yearly",
+        priceId: process.env.PLAYER_ROOKIE_MONTHLY_PRICE_ID || "price_1THmhwDvTG8XWAaKP5IdXAic",
+        yearlyPriceId: process.env.PLAYER_ROOKIE_YEARLY_PRICE_ID || "price_1THmhwDvTG8XWAaKP5IdXAic",
         traditionalLeagueCost: 3700, // $37/month typical league cost
         monthlySavings: 1200, // $12/month savings
         yearlySavings: 18500, // $185/year savings
@@ -54,8 +54,8 @@ export function getPlayerSubscriptionTier(tier: string) {
         name: "Standard",
         monthlyPrice: 3500, // $35/month
         yearlyPrice: 35700, // $357/year (save $63)
-        priceId: process.env.PLAYER_STANDARD_MONTHLY_PRICE_ID || "price_standard_monthly",
-        yearlyPriceId: process.env.PLAYER_STANDARD_YEARLY_PRICE_ID || "price_standard_yearly",
+        priceId: process.env.PLAYER_STANDARD_MONTHLY_PRICE_ID || "price_1THmi0DvTG8XWAaKGZwVO8WR",
+        yearlyPriceId: process.env.PLAYER_STANDARD_YEARLY_PRICE_ID || "price_1THmi0DvTG8XWAaKGZwVO8WR",
         traditionalLeagueCost: 3700, // $37/month typical league cost
         monthlySavings: 200, // $2/month savings
         yearlySavings: 2300, // $23/year savings
@@ -80,8 +80,8 @@ export function getPlayerSubscriptionTier(tier: string) {
         name: "Premium",
         monthlyPrice: 4500, // $45/month
         yearlyPrice: 45900, // $459/year (save $81)
-        priceId: process.env.PLAYER_PREMIUM_MONTHLY_PRICE_ID || "price_premium_monthly",
-        yearlyPriceId: process.env.PLAYER_PREMIUM_YEARLY_PRICE_ID || "price_premium_yearly",
+        priceId: process.env.PLAYER_PREMIUM_MONTHLY_PRICE_ID || "price_1THmi2DvTG8XWAaKpyx6VNyR",
+        yearlyPriceId: process.env.PLAYER_PREMIUM_YEARLY_PRICE_ID || "price_1THmi2DvTG8XWAaKpyx6VNyR",
         traditionalLeagueCost: 3700, // $37/month typical league cost
         monthlySavings: -800, // $8/month more but saves $40+ through perks
         yearlySavings: -1900, // $19/year more but saves $400+ annually through perks

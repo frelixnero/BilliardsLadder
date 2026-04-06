@@ -10,15 +10,15 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 // Stripe Price IDs for charity donations
 const prices = {
-  charity_product: "prod_Sz4wWq0exnJOBv",
+  charity_product: "prod_UGJKFusMczHWQ3",
   charity_donations: {
-    "5": "price_1S36mVDc2BliYufwKkppBTdZ",
-    "10": "price_1S36mWDc2BliYufw9SnYauG6", 
-    "25": "price_1S36mWDc2BliYufwdLec5IH6",
-    "50": "price_1S36mWDc2BliYufwnyruktLt",
-    "100": "price_1S36mWDc2BliYufwMMQxtrpd",
-    "250": "price_1S36mXDc2BliYufw8KoRGk5g",
-    "500": "price_1S36mXDc2BliYufwhW9OUZng"
+    "5": "price_1THmi4DvTG8XWAaKLE6mESxA",
+    "10": "price_1THmi7DvTG8XWAaKdKDzSjXE",
+    "25": "price_1THmi9DvTG8XWAaKY0S3p2Cf",
+    "50": "price_1THmiCDvTG8XWAaKbUxZQUnc",
+    "100": "price_1THmiEDvTG8XWAaK0aXNtqxB",
+    "250": "price_1THmiGDvTG8XWAaK1Lh1RO9i",
+    "500": "price_1THmiJDvTG8XWAaKPVETvXvR"
   }
 };
 

@@ -7,7 +7,7 @@ const stripe = process.env.STRIPE_SECRET_KEY
   : (null as unknown as Stripe);
 
 const prices = {
-  rookie_monthly: "price_1S36UcDc2BliYufwVpgpOph9",
+  rookie_monthly: "price_1THmhwDvTG8XWAaKP5IdXAic",
 };
 
 export function getAllRookieMatches(storage: IStorage) {

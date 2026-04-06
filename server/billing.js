@@ -82,7 +82,7 @@ function getSubscriptionTier(playerCount) {
       tier: "small",
       name: "Small Hall / Starter",
       price: 199,
-      priceId: process.env.SMALL_PRICE_ID || "price_small_tier",
+      priceId: process.env.SMALL_PRICE_ID || "price_1THmiLDvTG8XWAaKhXE4JvZq",
       perks: [
         "Up to 15 active players",
         "Full ladder management system",
@@ -95,7 +95,7 @@ function getSubscriptionTier(playerCount) {
       tier: "medium",
       name: "Medium Hall",
       price: 299,
-      priceId: process.env.MEDIUM_PRICE_ID || "price_medium_tier",
+      priceId: process.env.MEDIUM_PRICE_ID || "price_1THmiPDvTG8XWAaKkeveuEqq",
       perks: [
         "Up to 25 active players",
         "Full ladder management system",
@@ -108,7 +108,7 @@ function getSubscriptionTier(playerCount) {
       tier: "large",
       name: "Large Hall",
       price: 399,
-      priceId: process.env.LARGE_PRICE_ID || "price_large_tier",
+      priceId: process.env.LARGE_PRICE_ID || "price_1THmiRDvTG8XWAaK39Gg3Nb9",
       perks: [
         "Up to 40 active players",
         "Full ladder management system",
@@ -121,7 +121,7 @@ function getSubscriptionTier(playerCount) {
       tier: "mega",
       name: "Mega Hall / Multi-Location",
       price: 799,
-      priceId: process.env.MEGA_PRICE_ID || "price_mega_tier",
+      priceId: process.env.MEGA_PRICE_ID || "price_1THmiUDvTG8XWAaKa43Y9Bm9",
       perks: [
         "Unlimited players",
         "Full ladder management system",

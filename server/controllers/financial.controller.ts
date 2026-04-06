@@ -30,22 +30,22 @@ function getAppBaseUrl(): string {
 }
 
 const prices = {
-  rookie_monthly: process.env.PLAYER_ROOKIE_MONTHLY_PRICE_ID || "price_1T50oRDc2BliYufwrfHeSzfg",
-  basic_monthly: process.env.PLAYER_STANDARD_MONTHLY_PRICE_ID || "price_1T50oUDc2BliYufwltyeKc3v",
-  pro_monthly: process.env.PLAYER_PREMIUM_MONTHLY_PRICE_ID || "price_1T50oYDc2BliYufw6h8lK7x9",
-  small: process.env.SMALL_PRICE_ID || "price_1S0WigDc2BliYufwwhMBtfBp",
-  medium: process.env.MEDIUM_PRICE_ID || "price_1S0WmcDc2BliYufwIHGYbmh2",
-  large: process.env.LARGE_PRICE_ID || "price_1S0WolDc2BliYufwyArihWAl",
-  mega: process.env.MEGA_PRICE_ID || "price_1S0WzuDc2BliYufwG7E2CJbS",
-  charity_product: "prod_Sz4wWq0exnJOBv",
+  rookie_monthly: process.env.PLAYER_ROOKIE_MONTHLY_PRICE_ID || "price_1THmhwDvTG8XWAaKP5IdXAic",
+  basic_monthly: process.env.PLAYER_STANDARD_MONTHLY_PRICE_ID || "price_1THmi0DvTG8XWAaKGZwVO8WR",
+  pro_monthly: process.env.PLAYER_PREMIUM_MONTHLY_PRICE_ID || "price_1THmi2DvTG8XWAaKpyx6VNyR",
+  small: process.env.SMALL_PRICE_ID || "price_1THmiLDvTG8XWAaKhXE4JvZq",
+  medium: process.env.MEDIUM_PRICE_ID || "price_1THmiPDvTG8XWAaKkeveuEqq",
+  large: process.env.LARGE_PRICE_ID || "price_1THmiRDvTG8XWAaK39Gg3Nb9",
+  mega: process.env.MEGA_PRICE_ID || "price_1THmiUDvTG8XWAaKa43Y9Bm9",
+  charity_product: "prod_UGJKFusMczHWQ3",
   charity_donations: {
-    "5": "price_1S36mVDc2BliYufwKkppBTdZ",
-    "10": "price_1S36mWDc2BliYufw9SnYauG6",
-    "25": "price_1S36mWDc2BliYufwdLec5IH6",
-    "50": "price_1S36mWDc2BliYufwnyruktLt",
-    "100": "price_1S36mWDc2BliYufwMMQxtrpd",
-    "250": "price_1S36mXDc2BliYufw8KoRGk5g",
-    "500": "price_1S36mXDc2BliYufwhW9OUZng"
+    "5": "price_1THmi4DvTG8XWAaKLE6mESxA",
+    "10": "price_1THmi7DvTG8XWAaKdKDzSjXE",
+    "25": "price_1THmi9DvTG8XWAaKY0S3p2Cf",
+    "50": "price_1THmiCDvTG8XWAaKbUxZQUnc",
+    "100": "price_1THmiEDvTG8XWAaK0aXNtqxB",
+    "250": "price_1THmiGDvTG8XWAaK1Lh1RO9i",
+    "500": "price_1THmiJDvTG8XWAaKPVETvXvR"
   }
 };
 

@@ -1,0 +1,278 @@
+﻿# Stripe Price ID Consistency Report
+
+Generated: 2026-04-06 07:19:42 +01:00
+
+## Valid IDs
+- price_1THmhwDvTG8XWAaKP5IdXAic
+- price_1THmi0DvTG8XWAaKGZwVO8WR
+- price_1THmi2DvTG8XWAaKpyx6VNyR
+- price_1THmi4DvTG8XWAaKLE6mESxA
+- price_1THmi7DvTG8XWAaKdKDzSjXE
+- price_1THmi9DvTG8XWAaKY0S3p2Cf
+- price_1THmiCDvTG8XWAaKbUxZQUnc
+- price_1THmiEDvTG8XWAaK0aXNtqxB
+- price_1THmiGDvTG8XWAaK1Lh1RO9i
+- price_1THmiJDvTG8XWAaKPVETvXvR
+- price_1THmiLDvTG8XWAaKhXE4JvZq
+- price_1THmiPDvTG8XWAaKkeveuEqq
+- price_1THmiRDvTG8XWAaK39Gg3Nb9
+- price_1THmiUDvTG8XWAaKa43Y9Bm9
+
+## Missing/Invalid IDs
+- price_1
+- price_1QZtpFJKQVJqL5dGYJhCyGP2
+- price_1QZtpFJKQVJqL5dGYJhCyGP3
+- price_1QZtpFJKQVJqL5dGYJhCyGP4
+- price_1QZtpFJKQVJqL5dGYJhCyGP5
+- price_1QZtpFJKQVJqL5dGYJhCyGP6
+- price_1QZtpFJKQVJqL5dGYJhCyGP7
+- price_1QZtpFJKQVJqL5dGYJhCyGPl
+- price_1S0WigDc2BliYufwwhMBtfBp
+- price_1S0WmcDc2BliYufwIHGYbmh2
+- price_1S0WolDc2BliYufwyArihWAl
+- price_1S0WzuDc2BliYufwG7E2CJbS
+- price_1S36mVDc2BliYufwKkppBTdZ
+- price_1S36mWDc2BliYufw9SnYauG6
+- price_1S36mWDc2BliYufwdLec5IH6
+- price_1S36mWDc2BliYufwMMQxtrpd
+- price_1S36mWDc2BliYufwnyruktLt
+- price_1S36mXDc2BliYufw8KoRGk5g
+- price_1S36mXDc2BliYufwhW9OUZng
+- price_1S36UcDc2BliYufwVpgpOph9
+- price_1T50oRDc2BliYufwrfHeSzfg
+- price_1T50oUDc2BliYufwltyeKc3v
+- price_1T50oYDc2BliYufw6h8lK7x9
+- price_1T50uBDc2BliYufwQ6hMnDSp
+- price_cents
+- price_data
+- price_id
+- price_INVALID
+- price_large
+- price_live
+- price_medium
+- price_mega
+- price_monthly
+- price_premium
+- price_rookie
+- price_small
+- price_standard
+- price_your
+
+## Location map (id -> files)
+- price_1
+  - .\STRIPE_SETUP_GUIDE.md
+- price_1QZtpFJKQVJqL5dGYJhCyGP2
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1QZtpFJKQVJqL5dGYJhCyGP3
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1QZtpFJKQVJqL5dGYJhCyGP4
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1QZtpFJKQVJqL5dGYJhCyGP5
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1QZtpFJKQVJqL5dGYJhCyGP6
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1QZtpFJKQVJqL5dGYJhCyGP7
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1QZtpFJKQVJqL5dGYJhCyGPl
+  - .\client\src\pages\PaymentsPage.tsx
+- price_1S0WigDc2BliYufwwhMBtfBp
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S0WmcDc2BliYufwIHGYbmh2
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S0WolDc2BliYufwyArihWAl
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S0WzuDc2BliYufwG7E2CJbS
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mVDc2BliYufwKkppBTdZ
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mWDc2BliYufw9SnYauG6
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mWDc2BliYufwdLec5IH6
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mWDc2BliYufwMMQxtrpd
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mWDc2BliYufwnyruktLt
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mXDc2BliYufw8KoRGk5g
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36mXDc2BliYufwhW9OUZng
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\charity.controller.ts
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1S36UcDc2BliYufwVpgpOph9
+  - .\server\controllers\rookie.controller.ts
+- price_1T50oRDc2BliYufwrfHeSzfg
+  - .\attached_assets\MonetizationDashboard_1772130006059.tsx
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1T50oUDc2BliYufwltyeKc3v
+  - .\attached_assets\MonetizationDashboard_1772130006059.tsx
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1T50oYDc2BliYufw6h8lK7x9
+  - .\attached_assets\MonetizationDashboard_1772130006059.tsx
+  - .\exports\stripe-qa-report.md
+  - .\server\controllers\financial.controller.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_1T50uBDc2BliYufwQ6hMnDSp
+  - .\attached_assets\MonetizationDashboard_1772130006059.tsx
+- price_1THmhwDvTG8XWAaKP5IdXAic
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\server\routes.ts
+  - .\stripe_checkout_test.cjs
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_1THmi0DvTG8XWAaKGZwVO8WR
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_1THmi2DvTG8XWAaKpyx6VNyR
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_1THmi4DvTG8XWAaKLE6mESxA
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmi7DvTG8XWAaKdKDzSjXE
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmi9DvTG8XWAaKY0S3p2Cf
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmiCDvTG8XWAaKbUxZQUnc
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmiEDvTG8XWAaK0aXNtqxB
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmiGDvTG8XWAaK1Lh1RO9i
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmiJDvTG8XWAaKPVETvXvR
+  - .\exports\stripe-qa-report.md
+  - .\server\routes.ts
+  - .\stripe_outputs.json
+  - .canvas\assets\stripe-qa-report.md
+- price_1THmiLDvTG8XWAaKhXE4JvZq
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_1THmiPDvTG8XWAaKkeveuEqq
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_1THmiRDvTG8XWAaK39Gg3Nb9
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_1THmiUDvTG8XWAaKa43Y9Bm9
+  - .\exports\stripe-qa-report.md
+  - .\PROJECT_LIFECYCLE_REPORT.md
+  - .\stripe_outputs.json
+  - .\validate-stripe.js
+  - .canvas\assets\stripe-qa-report.md
+  - .env
+  - .enve
+- price_cents
+  - .\client\src\pages\PlayerCareerDashboard.tsx
+  - .\shared\schema.ts
+- price_data
+  - .\exports\stripe-qa-report.md
+  - .\replit.md
+  - .\server\billing.js
+  - .\server\controllers\tournament.controller.ts
+  - .\server\services\playerBilling.ts
+  - .canvas\assets\stripe-qa-report.md
+- price_id
+  - .\client\src\pages\PlayerCareerDashboard.tsx
+  - .\shared\schema.ts
+- price_INVALID
+  - .\exports\stripe-qa-report.md
+  - .canvas\assets\stripe-qa-report.md
+- price_large
+  - .\server\billing.js
+- price_live
+  - .\PRODUCTION_SETUP.md
+- price_medium
+  - .\server\billing.js
+- price_mega
+  - .\server\billing.js
+- price_monthly
+  - .\shared\schema.ts
+- price_premium
+  - .\server\services\playerBilling.ts
+- price_rookie
+  - .\server\services\playerBilling.ts
+- price_small
+  - .\server\billing.js
+- price_standard
+  - .\server\services\playerBilling.ts
+- price_your
+  - .\STRIPE_SETUP_GUIDE.md
