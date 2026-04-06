@@ -6,3 +6,9 @@ id = "qY0dA9lTyAsrC7uH6v166"
 uri = "file://exports/stripe-qa-report.md"
 type = "text"
 title = "Stripe QA Report - BilliardsLadder"
+
+[[outputs]]
+id = "igT9BNQsZdneGaru_j1eq"
+uri = "file://exports/stripe-production-verification-report.md"
+type = "text"
+title = "Stripe Production Verification Report"
