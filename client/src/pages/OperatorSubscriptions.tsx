@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,10 @@ interface HallTier {
   bgColor: string;
   btnColor: string;
   btnHover: string;
+  borderColor: string;
+  hoverBorderColor: string;
+  hoverShadow: string;
   perks: string[];
-  popular?: boolean;
 }
 
 const HALL_TIERS: HallTier[] = [
@@ -47,6 +50,9 @@ const HALL_TIERS: HallTier[] = [
     bgColor: "bg-green-900/10",
     btnColor: "bg-green-600",
     btnHover: "hover:bg-green-700",
+    borderColor: "rgba(74,222,128,0.35)",
+    hoverBorderColor: "rgba(74,222,128,0.8)",
+    hoverShadow: "0 10px 30px -5px rgba(34,197,94,0.3)",
     perks: [
       "Up to 15 active players",
       "Full ladder management system",
@@ -67,7 +73,9 @@ const HALL_TIERS: HallTier[] = [
     bgColor: "bg-blue-900/10",
     btnColor: "bg-blue-600",
     btnHover: "hover:bg-blue-700",
-    popular: true,
+    borderColor: "rgba(96,165,250,0.35)",
+    hoverBorderColor: "rgba(96,165,250,0.8)",
+    hoverShadow: "0 10px 30px -5px rgba(59,130,246,0.3)",
     perks: [
       "Up to 25 active players",
       "Full ladder management system",
@@ -89,6 +97,9 @@ const HALL_TIERS: HallTier[] = [
     bgColor: "bg-purple-900/10",
     btnColor: "bg-purple-600",
     btnHover: "hover:bg-purple-700",
+    borderColor: "rgba(192,132,252,0.35)",
+    hoverBorderColor: "rgba(192,132,252,0.8)",
+    hoverShadow: "0 10px 30px -5px rgba(168,85,247,0.3)",
     perks: [
       "Up to 40 active players",
       "Full ladder management system",
@@ -111,6 +122,9 @@ const HALL_TIERS: HallTier[] = [
     bgColor: "bg-yellow-900/10",
     btnColor: "bg-yellow-600",
     btnHover: "hover:bg-yellow-700",
+    borderColor: "rgba(250,204,21,0.35)",
+    hoverBorderColor: "rgba(250,204,21,0.8)",
+    hoverShadow: "0 10px 30px -5px rgba(234,179,8,0.3)",
     perks: [
       "Unlimited active players",
       "Multi-hall dashboard",
@@ -242,22 +256,7 @@ export default function OperatorSubscriptions() {
           const TierIcon = tier.icon;
 
           return (
-            <Card
-              key={tier.key}
-              className={`relative flex flex-col ${
-                isCurrentTier
-                  ? `ring-2 ${tier.ringColor} ${tier.bgColor}`
-                  : tier.popular
-                  ? `ring-2 ${tier.ringColor} ${tier.bgColor}`
-                  : "bg-gray-900 border-gray-700"
-              }`}
-              data-testid={`card-tier-${tier.key}`}
-            >
-              {tier.popular && !isCurrentTier && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-blue-500 text-white px-3">Most Popular</Badge>
-                </div>
-              )}
+            <TierCard key={tier.key} tier={tier} isCurrentTier={isCurrentTier}>
               {isCurrentTier && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                   <Badge className="bg-emerald-500 text-white px-3">Current Plan</Badge>
@@ -313,7 +312,7 @@ export default function OperatorSubscriptions() {
                   </Button>
                 )}
               </CardFooter>
-            </Card>
+            </TierCard>
           );
         })}
       </div>
@@ -375,6 +374,29 @@ export default function OperatorSubscriptions() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function TierCard({ tier, isCurrentTier, children }: { tier: HallTier; isCurrentTier: boolean; children: React.ReactNode }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className={`relative flex flex-col rounded-xl transition-all duration-300 ease-out ${
+        isCurrentTier ? tier.bgColor : ""
+      }`}
+      style={{
+        border: `1px solid ${isHovered ? tier.hoverBorderColor : tier.borderColor}`,
+        boxShadow: isHovered ? tier.hoverShadow : "none",
+        transform: isHovered ? "scale(1.03)" : "scale(1)",
+        background: isCurrentTier ? undefined : "rgb(17,24,39)",
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      data-testid={`card-tier-${tier.key}`}
+    >
+      {children}
     </div>
   );
 }
