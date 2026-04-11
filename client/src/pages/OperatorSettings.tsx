@@ -62,9 +62,12 @@ export default function OperatorSettings() {
     onSuccess: () => {
       toast({
         title: "Settings Updated",
-        description: "Your operator settings have been saved successfully",
+        description: "Your operator settings have been saved successfully. Redirecting to subscription setup...",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/operator/settings", operatorUserId] });
+      setTimeout(() => {
+        window.location.href = "/app?tab=operator-subscriptions";
+      }, 1500);
     },
     onError: (error: any) => {
       toast({
