@@ -7,7 +7,8 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { generateQRCodeUrl, generateJoinUrl } from "@/lib/qr-generator";
 import { generateFightNightPoster } from "@/lib/poster-generator";
 import { useToast } from "@/hooks/use-toast";
-import { Brain, TrendingUp, Zap, Settings, Users, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Brain, TrendingUp, Zap, Settings, Users, Shield, CreditCard, Crown, AlertCircle } from "lucide-react";
 import type {
   Player,
   Match,
@@ -154,6 +155,97 @@ function AIInsightsSection({
             <p className="text-sm text-green-200">{ladderAdvice}</p>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SubscriptionStatus() {
+  const { user } = useAuth();
+
+  const { data: billingStatus, isLoading } = useQuery<{
+    hasSubscription: boolean;
+    tier: string | null;
+    status: string;
+    tierInfo?: { name: string; monthlyPrice: number };
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+    monthlyPrice?: number;
+    perks?: string[];
+  }>({
+    queryKey: ["/api/player-billing/status"],
+    enabled: !!user,
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="bg-black/60 backdrop-blur-sm border border-neon-green/20 shadow-felt">
+        <CardContent className="p-4 flex items-center gap-3">
+          <LoadingSpinner size="sm" color="neon" />
+          <span className="text-gray-400 text-sm">Loading subscription...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const hasActive = billingStatus?.hasSubscription && billingStatus?.status === "active";
+  const tierName = billingStatus?.tierInfo?.name || billingStatus?.tier || "None";
+  const price = billingStatus?.monthlyPrice ? (billingStatus.monthlyPrice / 100).toFixed(2) : null;
+  const renewalDate = billingStatus?.currentPeriodEnd
+    ? new Date(billingStatus.currentPeriodEnd).toLocaleDateString()
+    : null;
+
+  return (
+    <Card className={`bg-black/60 backdrop-blur-sm border ${hasActive ? 'border-emerald-500/40' : 'border-yellow-500/40'} shadow-felt`} data-testid="subscription-status-card">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {hasActive ? (
+              <div className="p-2 bg-emerald-900/40 rounded-lg">
+                <Crown className="h-5 w-5 text-emerald-400" />
+              </div>
+            ) : (
+              <div className="p-2 bg-yellow-900/40 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-yellow-400" />
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white text-sm">Subscription</span>
+                <Badge className={hasActive
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                  : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                }>
+                  {hasActive ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+              {hasActive ? (
+                <div className="text-xs text-gray-400 mt-1">
+                  {tierName} Plan {price ? `- $${price}/mo` : ""} {renewalDate ? `- Renews ${renewalDate}` : ""}
+                  {billingStatus?.cancelAtPeriodEnd && (
+                    <span className="text-yellow-400 ml-1">(Cancels at period end)</span>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-gray-400 mt-1">
+                  No active plan - Subscribe to unlock full features
+                </div>
+              )}
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => window.location.href = hasActive ? "/app?tab=player-subscription" : "/app?tab=checkout"}
+            className={hasActive
+              ? "bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30"
+              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+            }
+            data-testid="button-manage-subscription"
+          >
+            <CreditCard className="h-4 w-4 mr-1" />
+            {hasActive ? "Manage" : "Subscribe"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -508,6 +600,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Subscription Status */}
+      <SubscriptionStatus />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatsCard
