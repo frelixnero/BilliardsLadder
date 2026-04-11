@@ -10,6 +10,7 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/create-owner", requireStaffOrOwner, authController.createOwner);
   app.post("/api/auth/create-operator", requireOwner, authController.createOperator);
   app.post("/api/auth/signup-player", authController.signupPlayer);
+  app.post("/api/auth/signup-operator", authController.signupOperator);
   app.post("/api/auth/change-password", authController.changePassword);
   app.get("/api/auth/user", authController.getCurrentUser);
   app.post("/api/auth/assign-role", requireStaffOrOwner, authController.assignRole);
