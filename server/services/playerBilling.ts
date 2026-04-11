@@ -350,21 +350,27 @@ export function registerPlayerBillingRoutes(app: Express) {
     try {
       const { sessionId } = req.body;
       if (!sessionId || !stripe) {
+        console.error("❌ Verify session: Missing sessionId or stripe not initialized");
         return res.status(400).json({ error: "Session ID required" });
       }
 
       const userId = (req as any).dbUser.id;
       if (!userId) {
+        console.error("❌ Verify session: No userId in dbUser");
         return res.status(401).json({ error: "Authentication required" });
       }
 
       const player = await storage.getPlayerByUserId(userId);
       if (!player) {
+        console.error(`❌ Verify session: No player found for userId ${userId}`);
         return res.status(404).json({ error: "Player not found" });
       }
 
+      console.log(`🔍 Verify session: Found player ${player.id} for userId ${userId}`);
+
       const existing = await storage.getMembershipSubscriptionByPlayerId(player.id);
       if (existing && existing.status === "active") {
+        console.log(`✅ Verify session: Found existing active subscription for player ${player.id}`);
         const tierInfo = getPlayerSubscriptionTier(existing.tier);
         return res.json({
           hasSubscription: true,
@@ -374,15 +380,33 @@ export function registerPlayerBillingRoutes(app: Express) {
         });
       }
 
+      console.log(`🔍 Verify session: Retrieving session ${sessionId} from Stripe...`);
       const session = await stripe.checkout.sessions.retrieve(sessionId);
-      if (!session || session.status !== "complete") {
-        return res.json({ hasSubscription: false, error: "Session not complete" });
+      console.log(`📦 Session status: ${session?.status}, payment_status: ${session?.payment_status}, metadata: ${JSON.stringify(session?.metadata)}`);
+
+      // Check if session is in a successful state
+      // Stripe sessions can be: "open", "complete", "expired"
+      // payment_status can be: "unpaid", "paid", "no_payment_required"
+      const isSuccessful = session?.payment_status === "paid" || session?.payment_status === "no_payment_required" || session?.status === "complete";
+
+      if (!session || !isSuccessful) {
+        console.warn(`⚠️  Verify session: Session not successful (status: ${session?.status}, payment_status: ${session?.payment_status})`);
+        return res.json({
+          hasSubscription: false,
+          error: "Session not complete",
+          sessionStatus: session?.status,
+          paymentStatus: session?.payment_status
+        });
       }
 
       const tier = session.metadata?.tier;
       if (!tier) {
-        return res.json({ hasSubscription: false, error: "No tier in session" });
+        console.error(`❌ Verify session: No tier found in session metadata for sessionId ${sessionId}`);
+        console.error(`   Session metadata: ${JSON.stringify(session.metadata)}`);
+        return res.json({ hasSubscription: false, error: "No tier in session", metadata: session.metadata });
       }
+
+      console.log(`✅ Verify session: Complete session found with tier ${tier}`);
 
       const tierInfo = getPlayerSubscriptionTier(tier);
       let stripeSubId = session.subscription as string || null;
@@ -390,25 +414,37 @@ export function registerPlayerBillingRoutes(app: Express) {
 
       if (stripeSubId) {
         try {
+          console.log(`📦 Retrieving subscription ${stripeSubId} from Stripe...`);
           const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
           periodEnd = new Date(stripeSub.current_period_end * 1000);
-        } catch { }
+          console.log(`✅ Subscription period ends: ${periodEnd.toISOString()}`);
+        } catch (err) {
+          console.error(`⚠️  Failed to retrieve subscription:`, err);
+        }
       }
 
-      await storage.createMembershipSubscription({
-        playerId: player.id,
-        tier,
-        status: "active",
-        stripeSubscriptionId: stripeSubId,
-        stripeCustomerId: session.customer as string || null,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: false,
-        monthlyPrice: tierInfo?.monthlyPrice || 0,
-        perks: tierInfo?.perks || [],
-        commissionRate: tierInfo?.commissionRate || 1000,
-      });
-      await storage.updatePlayer(player.id, { member: true });
+      try {
+        const subscription = await storage.createMembershipSubscription({
+          playerId: player.id,
+          tier,
+          status: "active",
+          stripeSubscriptionId: stripeSubId,
+          stripeCustomerId: session.customer as string || null,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: periodEnd,
+          cancelAtPeriodEnd: false,
+          monthlyPrice: tierInfo?.monthlyPrice || 0,
+          perks: tierInfo?.perks || [],
+          commissionRate: tierInfo?.commissionRate || 1000,
+        });
+        console.log(`✅ Created membership subscription:`, subscription);
+
+        await storage.updatePlayer(player.id, { member: true });
+        console.log(`✅ Updated player.member = true for player ${player.id}`);
+      } catch (dbErr: any) {
+        console.error(`❌ Database error creating subscription:`, dbErr);
+        throw dbErr;
+      }
 
       console.log(`✅ Verified and created subscription for player ${player.id} tier ${tier}`);
 
@@ -420,8 +456,8 @@ export function registerPlayerBillingRoutes(app: Express) {
       });
 
     } catch (error: any) {
-      console.error("Verify session error:", error);
-      res.status(500).json({ error: error.message });
+      console.error(`❌ Verify session error:`, error.message || error);
+      res.status(500).json({ error: error.message || "Unknown error" });
     }
   });
 

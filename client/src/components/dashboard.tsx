@@ -640,28 +640,40 @@ export default function Dashboard() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("subscription") === "success") {
       const sessionId = params.get("session_id");
+      console.log(`🔍 [Dashboard] Post-checkout: sessionId=${sessionId}`);
 
       const verifyAndShow = async () => {
         let verified = false;
         if (sessionId) {
           try {
+            console.log(`📡 [Dashboard] Calling verify-session endpoint...`);
             const resp = await fetch("/api/player-billing/verify-session", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
               body: JSON.stringify({ sessionId }),
             });
+
+            const data = await resp.json();
+            console.log(`✅ [Dashboard] Verify-session response:`, data);
+
             if (resp.ok) {
-              const data = await resp.json();
               verified = data.hasSubscription === true;
+              console.log(`📦 [Dashboard] Verified subscription: ${verified}`);
+            } else {
+              console.error(`❌ [Dashboard] Verify-session failed with status ${resp.status}:`, data);
             }
-          } catch {}
+          } catch (err) {
+            console.error(`❌ [Dashboard] Verify-session error:`, err);
+          }
         }
 
+        console.log(`🔄 [Dashboard] Invalidating query cache...`);
         await queryClient.invalidateQueries({ queryKey: ["/api/player-billing/status"] });
         await queryClient.invalidateQueries({ queryKey: ["/api/operator-subscriptions", user?.id] });
 
         if (verified || sessionId) {
+          console.log(`🎉 [Dashboard] Showing success banner`);
           setShowSuccessBanner(true);
           toast({
             title: "Subscription Activated!",
