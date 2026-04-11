@@ -203,7 +203,8 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
       icon: DollarSign,
       requiresAuth: true, // Entire finance section requires authentication
       items: [
-        { id: "player-subscription", label: "💳 Subscription Plans", requiresAuth: true },
+        { id: "player-subscription", label: "💳 Subscription Plans", roles: ["PLAYER"] as GlobalRole[], requiresAuth: true },
+        { id: "operator-subscriptions", label: "💼 Operator Subscriptions", roles: ["OWNER", "OPERATOR", "TRUSTEE"] as GlobalRole[], requiresAuth: true },
         { id: "checkout", label: "💰 Billing & Payments", requiresAuth: true },
         { id: "monetization", label: "📊 Revenue Dashboard", roles: ["OWNER", "OPERATOR", "TRUSTEE"] as GlobalRole[], requiresAuth: true },
       ]
@@ -231,7 +232,6 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
       items: [
         { id: "qr-registration", label: "📱 QR Registration", requiresAuth: true },
         { id: "operator-settings", label: "⚙️ Operator Settings", requiresAuth: true },
-        { id: "operator-subscriptions", label: "💼 Operator Subscriptions", requiresAuth: true },
         { id: "revenue-admin", label: "💰 Revenue Configuration", roles: ["OWNER", "TRUSTEE"] as GlobalRole[], requiresAuth: true },
         { id: "admin-training-rewards", label: "🏆 Training Rewards", roles: ["OWNER", "OPERATOR", "STAFF"] as GlobalRole[], requiresAuth: true },
         { id: "admin", label: "🛡️ Admin Dashboard", requiresAuth: true },
