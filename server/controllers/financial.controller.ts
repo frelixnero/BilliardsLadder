@@ -136,8 +136,23 @@ export function createCheckoutSession() {
         }
       };
 
-      if (customerId) {
-        sessionPayload.customer = customerId;
+      let resolvedCustomerId = customerId;
+      if (!resolvedCustomerId && stripe) {
+        const dbUser = (req as any).dbUser;
+        if (dbUser?.stripeCustomerId) {
+          resolvedCustomerId = dbUser.stripeCustomerId;
+        } else if (dbUser) {
+          const customer = await stripe.customers.create({
+            email: dbUser.email,
+            name: dbUser.name,
+            metadata: { userId: dbUser.id, userRole: dbUser.globalRole },
+          });
+          resolvedCustomerId = customer.id;
+        }
+      }
+
+      if (resolvedCustomerId) {
+        sessionPayload.customer = resolvedCustomerId;
       }
 
       const session = await createSafeCheckoutSession(sessionPayload);

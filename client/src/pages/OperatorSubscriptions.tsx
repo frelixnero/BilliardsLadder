@@ -34,6 +34,7 @@ interface HallTier {
   borderColor: string;
   hoverBorderColor: string;
   hoverShadow: string;
+  priceId: string;
   perks: string[];
 }
 
@@ -53,6 +54,7 @@ const HALL_TIERS: HallTier[] = [
     borderColor: "rgba(74,222,128,0.35)",
     hoverBorderColor: "rgba(74,222,128,0.8)",
     hoverShadow: "0 10px 30px -5px rgba(34,197,94,0.3)",
+    priceId: "price_1THmiLDvTG8XWAaKhXE4JvZq",
     perks: [
       "Up to 15 active players",
       "Full ladder management system",
@@ -76,6 +78,7 @@ const HALL_TIERS: HallTier[] = [
     borderColor: "rgba(96,165,250,0.35)",
     hoverBorderColor: "rgba(96,165,250,0.8)",
     hoverShadow: "0 10px 30px -5px rgba(59,130,246,0.3)",
+    priceId: "price_1THmiPDvTG8XWAaKkeveuEqq",
     perks: [
       "Up to 25 active players",
       "Full ladder management system",
@@ -100,6 +103,7 @@ const HALL_TIERS: HallTier[] = [
     borderColor: "rgba(192,132,252,0.35)",
     hoverBorderColor: "rgba(192,132,252,0.8)",
     hoverShadow: "0 10px 30px -5px rgba(168,85,247,0.3)",
+    priceId: "price_1THmiRDvTG8XWAaK39Gg3Nb9",
     perks: [
       "Up to 40 active players",
       "Full ladder management system",
@@ -125,6 +129,7 @@ const HALL_TIERS: HallTier[] = [
     borderColor: "rgba(250,204,21,0.35)",
     hoverBorderColor: "rgba(250,204,21,0.8)",
     hoverShadow: "0 10px 30px -5px rgba(234,179,8,0.3)",
+    priceId: "price_1THmiUDvTG8XWAaKa43Y9Bm9",
     perks: [
       "Unlimited active players",
       "Multi-hall dashboard",
@@ -176,14 +181,18 @@ export default function OperatorSubscriptions() {
     mutationFn: (tierKey: string) => {
       const tier = HALL_TIERS.find(t => t.key === tierKey);
       if (!tier) throw new Error("Invalid tier");
-      const playerCount = tierKey === "small" ? 10 : tierKey === "medium" ? 20 : tierKey === "large" ? 35 : 50;
       return apiRequest("/api/billing/checkout", {
         method: "POST",
         body: JSON.stringify({
-          playerCount,
-          hallId: user?.id,
-          operatorId: user?.id,
-          email: user?.email,
+          priceIds: [tier.priceId],
+          mode: "subscription",
+          userId: user?.id,
+          metadata: {
+            hallId: user?.id,
+            operatorId: user?.id,
+            tier: tier.key,
+            productType: "operator_subscription",
+          },
         }),
       });
     },
