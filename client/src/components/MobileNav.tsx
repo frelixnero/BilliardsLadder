@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "@/hooks/useAuth";
 import type { GlobalRole } from "@shared/schema";
 
 interface NavigationGroup {
@@ -23,6 +24,7 @@ interface MobileNavProps {
 export function MobileNav({ navigationGroups, activeTab, setActiveTab, userRole }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
+  const { isAuthenticated } = useAuth();
 
   // Filter groups based on user role
   const visibleGroups = navigationGroups.filter(group => 
@@ -142,7 +144,39 @@ export function MobileNav({ navigationGroups, activeTab, setActiveTab, userRole 
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-emerald-400/20">
+          <div className="p-4 border-t border-emerald-400/20 space-y-3">
+            {isAuthenticated ? (
+              <Button
+                onClick={() => {
+                  setIsOpen(false);
+                  fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+                    .then(() => { window.location.href = "/"; })
+                    .catch(() => { window.location.href = "/"; });
+                }}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-2.5"
+                data-testid="button-logout-mobile"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log Out
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => { setIsOpen(false); window.location.href = "/login"; }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-2.5"
+                  data-testid="button-login-mobile"
+                >
+                  Log In
+                </Button>
+                <Button
+                  onClick={() => { setIsOpen(false); window.location.href = "/signup"; }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-2.5"
+                  data-testid="button-signup-mobile"
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
             <p className="text-xs text-emerald-200/70 text-center">
               In here, respect is earned in racks, not words
             </p>

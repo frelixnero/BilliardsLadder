@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trophy, Camera, DollarSign, Users, Settings } from "lucide-react";
+import { ChevronDown, Trophy, Camera, DollarSign, Users, Settings, LogOut } from "lucide-react";
 import type { GlobalRole } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/components/dashboard";
@@ -344,6 +344,41 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
           >
             Join via QR
           </button>
+          {isAuthenticated ? (
+            <button
+              onClick={() => {
+                fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+                  .then(() => { window.location.href = "/"; })
+                  .catch(() => { window.location.href = "/"; });
+              }}
+              className="hidden md:inline-flex whitespace-nowrap rounded-xl px-3 md:px-4 py-2 text-xs md:text-sm font-semibold
+                         bg-emerald-600 hover:bg-emerald-700 text-white transition items-center gap-2"
+              data-testid="button-logout-desktop"
+            >
+              <LogOut className="h-4 w-4" />
+              Log Out
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => { window.location.href = "/login"; }}
+                className="hidden md:inline-flex whitespace-nowrap rounded-xl px-3 md:px-4 py-2 text-xs md:text-sm font-semibold
+                           bg-emerald-600 hover:bg-emerald-700 text-white transition items-center"
+                data-testid="button-login-desktop"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => { window.location.href = "/signup"; }}
+                className="hidden md:inline-flex whitespace-nowrap rounded-xl px-3 md:px-4 py-2 text-xs md:text-sm font-semibold
+                           ring-1 ring-emerald-400/50 bg-emerald-500/15 text-emerald-200
+                           hover:bg-emerald-500/25 transition items-center"
+                data-testid="button-signup-desktop"
+              >
+                Sign Up
+              </button>
+            </>
+          )}
           <MobileNav
             navigationGroups={navigationGroups}
             activeTab={activeTab}
