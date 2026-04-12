@@ -407,12 +407,19 @@ export function registerPlayerBillingRoutes(app: Express) {
         try {
           console.log(`📦 Retrieving subscription ${stripeSubId} from Stripe...`);
           const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
-          periodEnd = new Date(stripeSub.current_period_end * 1000);
+          const currentPeriodEnd = stripeSub.current_period_end;
+          if (typeof currentPeriodEnd === "number" && currentPeriodEnd > 0) {
+            const parsedPeriodEnd = new Date(currentPeriodEnd * 1000);
+            if (!Number.isNaN(parsedPeriodEnd.getTime())) {
+              periodEnd = parsedPeriodEnd;
+            }
+          }
           if (!tier) {
             tier = stripeSub.metadata?.tier || null;
           }
           console.log(`✅ Subscription period ends: ${periodEnd.toISOString()}`);
         } catch (err) {
+          periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
           console.error(`⚠️  Failed to retrieve subscription:`, err);
         }
       }
