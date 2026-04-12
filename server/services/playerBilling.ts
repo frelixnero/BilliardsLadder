@@ -8,6 +8,13 @@ const stripe = process.env.STRIPE_SECRET_KEY
   : (null as unknown as Stripe);
 
 function getAppBaseUrl(): string {
+  if (process.env.NODE_ENV !== "production") {
+    const replitDomain = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
+    if (replitDomain) {
+      return `https://${replitDomain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+    }
+  }
+
   const configuredBaseUrl = process.env.APP_BASE_URL?.trim();
   if (configuredBaseUrl) {
     return configuredBaseUrl.replace(/\/+$/, "");
