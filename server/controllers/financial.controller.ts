@@ -113,8 +113,7 @@ export function createCheckoutSession() {
     try {
       const { priceIds = [], mode = 'subscription', quantities = [], metadata = {}, userId, customerId } = req.body;
 
-      // Use request hostname for redirect URLs (ensures redirect goes to current server, not stale deployment)
-      const requestBaseUrl = `${req.protocol}://${req.get('host')}`;
+      const baseUrl = getAppBaseUrl();
 
       const line_items = priceIds.map((priceId: string, i: number) => ({
         price: priceId,
@@ -124,8 +123,8 @@ export function createCheckoutSession() {
       const sessionPayload: any = {
         mode,
         line_items,
-        success_url: `${requestBaseUrl}/app?tab=dashboard&subscription=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${requestBaseUrl}/app?tab=dashboard&subscription=cancelled`,
+        success_url: `${baseUrl}/app?tab=dashboard&subscription=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/app?tab=dashboard&subscription=cancelled`,
         allow_promotion_codes: true,
         automatic_tax: { enabled: false },
         client_reference_id: userId,
