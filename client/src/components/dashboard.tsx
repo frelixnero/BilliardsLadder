@@ -644,7 +644,6 @@ export default function Dashboard() {
         let verified = false;
         let attempts = 0;
         const maxAttempts = 5;
-        let lastError: string | null = null;
 
         while (!verified && sessionId && attempts < maxAttempts) {
           attempts += 1;
@@ -657,11 +656,10 @@ export default function Dashboard() {
             });
 
             const data = await resp.json();
-            console.log(`[verify-session] attempt ${attempts}: status=${resp.status}`, data);
-
             if (resp.ok && data.hasSubscription === true) {
               verified = true;
 
+              // Prime the cache immediately so the status card updates without waiting on another round-trip.
               queryClient.setQueryData(["/api/player-billing/status"], {
                 hasSubscription: true,
                 tier: data.tier,
@@ -670,19 +668,18 @@ export default function Dashboard() {
               });
               break;
             }
-            lastError = data.error || `hasSubscription=${data.hasSubscription}`;
-          } catch (err: any) {
-            lastError = err?.message || "Network error";
-            console.error(`[verify-session] attempt ${attempts} error:`, err);
+          } catch (error) {
+            // Keep a single failure signal in the console; retries continue below.
+            console.error("Subscription verification request failed", error);
           }
 
           if (attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            await new Promise((resolve) => setTimeout(resolve, 1200));
           }
         }
 
+        // Avoid immediately overwriting the verified cache with a stale read.
         if (!verified) {
-          console.warn(`[verify-session] all ${maxAttempts} attempts failed. Last error: ${lastError}`);
           await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status"], type: "all" });
           await queryClient.refetchQueries({ queryKey: ["/api/operator-subscriptions", user?.id], type: "all" });
         }
@@ -697,6 +694,7 @@ export default function Dashboard() {
           });
         }
 
+        // Clear URL params only after verification attempts complete.
         const url = new URL(window.location.href);
         url.searchParams.delete("subscription");
         url.searchParams.delete("session_id");
@@ -741,8 +739,38 @@ export default function Dashboard() {
     jackpotLoading
   ) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" color="neon" />
+      <div className="space-y-8">
+        {showSuccessBanner && (
+          <div
+            className="flex items-center gap-3 px-5 py-4 rounded-xl border"
+            style={{
+              background: "rgba(16,185,129,0.1)",
+              borderColor: "rgba(16,185,129,0.4)",
+            }}
+            data-testid="subscription-success-banner"
+          >
+            <CheckCircle2 className="h-6 w-6 text-emerald-400 flex-shrink-0" />
+            <div>
+              <p className="text-emerald-400 font-semibold">Subscription Activated!</p>
+              <p className="text-gray-300 text-sm">Your membership is now active. Your subscription status has been updated below.</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto text-gray-400 hover:text-white"
+              onClick={() => setShowSuccessBanner(false)}
+              data-testid="button-dismiss-success"
+            >
+              Dismiss
+            </Button>
+          </div>
+        )}
+
+        <DashboardSubscriptionStatus />
+
+        <div className="flex justify-center items-center h-64">
+          <LoadingSpinner size="lg" color="neon" />
+        </div>
       </div>
     );
   }

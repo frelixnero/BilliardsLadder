@@ -400,22 +400,18 @@ export function registerPlayerBillingRoutes(app: Express) {
       }
 
       let stripeSubId = session.subscription as string || null;
-      const defaultPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      let periodEnd = defaultPeriodEnd;
+      let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       let tier = session.metadata?.tier || null;
 
       if (stripeSubId) {
         try {
           console.log(`📦 Retrieving subscription ${stripeSubId} from Stripe...`);
           const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
-          const rawEnd = stripeSub.current_period_end;
-          console.log(`📦 raw current_period_end value: ${rawEnd} (type: ${typeof rawEnd})`);
-          if (rawEnd && typeof rawEnd === "number" && rawEnd > 0) {
-            const candidateDate = new Date(rawEnd * 1000);
-            if (!isNaN(candidateDate.getTime())) {
-              periodEnd = candidateDate;
-            } else {
-              console.warn(`⚠️ Invalid Date from current_period_end=${rawEnd}, using default`);
+          const currentPeriodEnd = stripeSub.current_period_end;
+          if (typeof currentPeriodEnd === "number" && currentPeriodEnd > 0) {
+            const parsedPeriodEnd = new Date(currentPeriodEnd * 1000);
+            if (!Number.isNaN(parsedPeriodEnd.getTime())) {
+              periodEnd = parsedPeriodEnd;
             }
           }
           if (!tier) {
@@ -423,8 +419,8 @@ export function registerPlayerBillingRoutes(app: Express) {
           }
           console.log(`✅ Subscription period ends: ${periodEnd.toISOString()}`);
         } catch (err) {
+          periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
           console.error(`⚠️  Failed to retrieve subscription:`, err);
-          periodEnd = defaultPeriodEnd;
         }
       }
 
@@ -452,23 +448,27 @@ export function registerPlayerBillingRoutes(app: Express) {
           perks: tierInfo?.perks || [],
           commissionRate: tierInfo?.commissionRate || 1000,
         });
-        console.log(`✅ Created membership subscription: id=${subscription.id} player=${player.id} tier=${tier}`);
+        console.log(`✅ Created membership subscription:`, subscription);
 
         await storage.updatePlayer(player.id, { member: true });
         console.log(`✅ Updated player.member = true for player ${player.id}`);
       } catch (dbErr: any) {
-        if (dbErr?.code === "23505" || dbErr?.message?.includes("unique") || dbErr?.message?.includes("duplicate")) {
-          console.log(`⚠️ Duplicate subscription insert for player ${player.id} — checking existing record`);
-          const existingAfterInsert = await storage.getMembershipSubscriptionByPlayerId(player.id);
-          if (existingAfterInsert) {
+        // Idempotency: duplicate insert can happen on retries if a previous attempt already persisted.
+        if (dbErr?.code === "23505") {
+          const existingAfterConflict = await storage.getMembershipSubscriptionByPlayerId(player.id);
+          if (existingAfterConflict && existingAfterConflict.status === "active") {
+            console.warn(`⚠️ Verify session: Duplicate insert for player ${player.id}; returning existing subscription`);
+            const tierInfoFromExisting = getPlayerSubscriptionTier(existingAfterConflict.tier);
+            await storage.updatePlayer(player.id, { member: true });
             return res.json({
               hasSubscription: true,
-              tier: existingAfterInsert.tier,
-              status: existingAfterInsert.status,
-              tierInfo: getPlayerSubscriptionTier(existingAfterInsert.tier),
+              tier: existingAfterConflict.tier,
+              status: existingAfterConflict.status,
+              tierInfo: tierInfoFromExisting,
             });
           }
         }
+
         console.error(`❌ Database error creating subscription:`, dbErr);
         throw dbErr;
       }

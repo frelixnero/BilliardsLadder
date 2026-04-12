@@ -161,7 +161,7 @@ In `handleCheckoutCompleted()`, the `checkout.session.completed` webhook event f
 ---
 
 ## 10. Stripe Session Verification — Client-Side Fallback
-**Status:** Partial  
+**Status:** Completed  
 **Severity:** Critical Bug  
 **Files Modified:** `server/services/playerBilling.ts`, `client/src/components/dashboard.tsx`
 
@@ -180,7 +180,10 @@ In `handleCheckoutCompleted()`, the `checkout.session.completed` webhook event f
    - Idempotent: checks for existing record before creating.
 3. **Dashboard `useEffect`** calls the verify endpoint before invalidating queries, ensuring the record exists before the status refetch.
 
-**Limitation:** There is a brief window (~1-3 seconds) after Stripe checkout where the session status may not yet be `complete`. In practice this is rare as the redirect itself takes time.
+**Final Hardening Added:**
+- Verification now retries safely in the dashboard flow and avoids stale cache overwrites after successful verification.
+- `verify-session` handles duplicate-insert conflicts idempotently (`23505`) by returning existing active subscriptions.
+- `current_period_end` parsing is validated before persistence to prevent `Invalid time value` crashes.
 
 ---
 
@@ -260,6 +263,23 @@ This ensures the subscription record created by the verify-session endpoint can 
 
 ---
 
+## 15. Preview Validation — End-to-End PASS
+**Status:** Completed  
+**Severity:** Validation  
+**Files Verified:** `server/services/playerBilling.ts`, `client/src/components/dashboard.tsx`, `server/routes.ts`
+
+**Verification Results (Replit preview runtime):**
+- `POST /api/player-billing/verify-session` exists and is protected by auth (`401` unauthenticated, `200` authenticated).
+- Authenticated verify returns `hasSubscription: true` and active tier data.
+- `GET /api/player-billing/status` returns `hasSubscription: true` with active subscription payload.
+- `membership_subscriptions` contains active subscription record and `players.member = true`.
+
+**Runtime Notes:**
+- Verified against preview runtime commit `f947a6d` (ahead of interim task-branch hashes).
+- Root failure (`Invalid time value`) was resolved by guarding `current_period_end` parsing and retaining fallback period dates.
+
+---
+
 ## Status Summary
 
 | # | Issue | Category | Severity | Status | Files |
@@ -278,6 +298,7 @@ This ensures the subscription record created by the verify-session endpoint can 
 | 12 | Operator Success URL | Bug | Low | Done | `financial.controller.ts` |
 | 13 | Player Subscription Card Styling | UI | Low | Done | `PlayerSubscriptionTiers.tsx` |
 | 14 | Player Subscription Status Query Mismatch | Bug | Critical | Done | `playerBilling.ts`, `premiumSavingsCalculator.ts` |
+| 15 | Preview E2E Validation | Validation | High | Done | `playerBilling.ts`, `dashboard.tsx`, `routes.ts` |
 
 ---
 
