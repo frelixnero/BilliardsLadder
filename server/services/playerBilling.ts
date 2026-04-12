@@ -446,6 +446,22 @@ export function registerPlayerBillingRoutes(app: Express) {
         await storage.updatePlayer(player.id, { member: true });
         console.log(`✅ Updated player.member = true for player ${player.id}`);
       } catch (dbErr: any) {
+        // Idempotency: duplicate insert can happen on retries if a previous attempt already persisted.
+        if (dbErr?.code === "23505") {
+          const existingAfterConflict = await storage.getMembershipSubscriptionByPlayerId(player.id);
+          if (existingAfterConflict && existingAfterConflict.status === "active") {
+            console.warn(`⚠️ Verify session: Duplicate insert for player ${player.id}; returning existing subscription`);
+            const tierInfoFromExisting = getPlayerSubscriptionTier(existingAfterConflict.tier);
+            await storage.updatePlayer(player.id, { member: true });
+            return res.json({
+              hasSubscription: true,
+              tier: existingAfterConflict.tier,
+              status: existingAfterConflict.status,
+              tierInfo: tierInfoFromExisting,
+            });
+          }
+        }
+
         console.error(`❌ Database error creating subscription:`, dbErr);
         throw dbErr;
       }

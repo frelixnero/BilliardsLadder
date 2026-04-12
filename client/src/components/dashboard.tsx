@@ -648,6 +648,7 @@ export default function Dashboard() {
         while (!verified && sessionId && attempts < maxAttempts) {
           attempts += 1;
           try {
+            console.log(`[subscription-verify] attempt ${attempts}/${maxAttempts} for session ${sessionId}`);
             const resp = await fetch("/api/player-billing/verify-session", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -656,6 +657,7 @@ export default function Dashboard() {
             });
 
             const data = await resp.json();
+            console.log(`[subscription-verify] response status=${resp.status}`, data);
             if (resp.ok && data.hasSubscription === true) {
               verified = true;
 
@@ -668,8 +670,12 @@ export default function Dashboard() {
               });
               break;
             }
-          } catch {
-            // Ignore transient failures and retry below.
+
+            if (!resp.ok || data.hasSubscription !== true) {
+              console.warn(`[subscription-verify] verify did not confirm active subscription on attempt ${attempts}`);
+            }
+          } catch (error) {
+            console.error(`[subscription-verify] request failed on attempt ${attempts}`, error);
           }
 
           if (attempts < maxAttempts) {
@@ -677,8 +683,11 @@ export default function Dashboard() {
           }
         }
 
-        await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status"], type: "all" });
-        await queryClient.refetchQueries({ queryKey: ["/api/operator-subscriptions", user?.id], type: "all" });
+        // Avoid immediately overwriting the verified cache with a stale read.
+        if (!verified) {
+          await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status"], type: "all" });
+          await queryClient.refetchQueries({ queryKey: ["/api/operator-subscriptions", user?.id], type: "all" });
+        }
 
         if (verified || sessionId) {
           setShowSuccessBanner(true);
@@ -735,8 +744,38 @@ export default function Dashboard() {
     jackpotLoading
   ) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" color="neon" />
+      <div className="space-y-8">
+        {showSuccessBanner && (
+          <div
+            className="flex items-center gap-3 px-5 py-4 rounded-xl border"
+            style={{
+              background: "rgba(16,185,129,0.1)",
+              borderColor: "rgba(16,185,129,0.4)",
+            }}
+            data-testid="subscription-success-banner"
+          >
+            <CheckCircle2 className="h-6 w-6 text-emerald-400 flex-shrink-0" />
+            <div>
+              <p className="text-emerald-400 font-semibold">Subscription Activated!</p>
+              <p className="text-gray-300 text-sm">Your membership is now active. Your subscription status has been updated below.</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto text-gray-400 hover:text-white"
+              onClick={() => setShowSuccessBanner(false)}
+              data-testid="button-dismiss-success"
+            >
+              Dismiss
+            </Button>
+          </div>
+        )}
+
+        <DashboardSubscriptionStatus />
+
+        <div className="flex justify-center items-center h-64">
+          <LoadingSpinner size="lg" color="neon" />
+        </div>
       </div>
     );
   }
