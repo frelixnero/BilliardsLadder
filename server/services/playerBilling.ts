@@ -441,11 +441,23 @@ export function registerPlayerBillingRoutes(app: Express) {
           perks: tierInfo?.perks || [],
           commissionRate: tierInfo?.commissionRate || 1000,
         });
-        console.log(`✅ Created membership subscription:`, subscription);
+        console.log(`✅ Created membership subscription: id=${subscription.id} player=${player.id} tier=${tier}`);
 
         await storage.updatePlayer(player.id, { member: true });
         console.log(`✅ Updated player.member = true for player ${player.id}`);
       } catch (dbErr: any) {
+        if (dbErr?.code === "23505" || dbErr?.message?.includes("unique") || dbErr?.message?.includes("duplicate")) {
+          console.log(`⚠️ Duplicate subscription insert for player ${player.id} — checking existing record`);
+          const existingAfterInsert = await storage.getMembershipSubscriptionByPlayerId(player.id);
+          if (existingAfterInsert) {
+            return res.json({
+              hasSubscription: true,
+              tier: existingAfterInsert.tier,
+              status: existingAfterInsert.status,
+              tierInfo: getPlayerSubscriptionTier(existingAfterInsert.tier),
+            });
+          }
+        }
         console.error(`❌ Database error creating subscription:`, dbErr);
         throw dbErr;
       }

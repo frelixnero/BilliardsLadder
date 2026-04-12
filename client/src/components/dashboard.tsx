@@ -644,6 +644,7 @@ export default function Dashboard() {
         let verified = false;
         let attempts = 0;
         const maxAttempts = 5;
+        let lastError: string | null = null;
 
         while (!verified && sessionId && attempts < maxAttempts) {
           attempts += 1;
@@ -656,10 +657,11 @@ export default function Dashboard() {
             });
 
             const data = await resp.json();
+            console.log(`[verify-session] attempt ${attempts}: status=${resp.status}`, data);
+
             if (resp.ok && data.hasSubscription === true) {
               verified = true;
 
-              // Prime the cache immediately so the status card updates without waiting on another round-trip.
               queryClient.setQueryData(["/api/player-billing/status"], {
                 hasSubscription: true,
                 tier: data.tier,
@@ -668,17 +670,22 @@ export default function Dashboard() {
               });
               break;
             }
-          } catch {
-            // Ignore transient failures and retry below.
+            lastError = data.error || `hasSubscription=${data.hasSubscription}`;
+          } catch (err: any) {
+            lastError = err?.message || "Network error";
+            console.error(`[verify-session] attempt ${attempts} error:`, err);
           }
 
           if (attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 1200));
+            await new Promise((resolve) => setTimeout(resolve, 1500));
           }
         }
 
-        await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status"], type: "all" });
-        await queryClient.refetchQueries({ queryKey: ["/api/operator-subscriptions", user?.id], type: "all" });
+        if (!verified) {
+          console.warn(`[verify-session] all ${maxAttempts} attempts failed. Last error: ${lastError}`);
+          await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status"], type: "all" });
+          await queryClient.refetchQueries({ queryKey: ["/api/operator-subscriptions", user?.id], type: "all" });
+        }
 
         if (verified || sessionId) {
           setShowSuccessBanner(true);
@@ -690,7 +697,6 @@ export default function Dashboard() {
           });
         }
 
-        // Clear URL params only after verification attempts complete.
         const url = new URL(window.location.href);
         url.searchParams.delete("subscription");
         url.searchParams.delete("session_id");
