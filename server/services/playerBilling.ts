@@ -244,6 +244,8 @@ export function registerPlayerBillingRoutes(app: Express) {
       }
 
       // Create checkout session with dynamic price (no need for pre-created price IDs)
+      // Use request hostname to ensure redirect goes to the current server instance (not stale deployed version)
+      const requestBaseUrl = `${req.protocol}://${req.get('host')}`;
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customerId,
@@ -263,8 +265,8 @@ export function registerPlayerBillingRoutes(app: Express) {
           },
           quantity: 1
         }],
-        success_url: `${appBaseUrl}/app?tab=dashboard&subscription=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${appBaseUrl}/app?tab=dashboard&subscription=cancelled`,
+        success_url: `${requestBaseUrl}/app?tab=dashboard&subscription=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${requestBaseUrl}/app?tab=dashboard&subscription=cancelled`,
         client_reference_id: userId,
         subscription_data: {
           metadata: {
