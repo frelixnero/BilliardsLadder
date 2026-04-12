@@ -206,7 +206,7 @@ function SubscriptionStatus() {
 
   if (isLoading) {
     return (
-      <div className="w-44 h-20 rounded-xl flex items-center justify-center" style={{ background: "rgba(17,24,39,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+      <div className="w-44 h-20 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)" }}>
         <LoadingSpinner size="sm" color="neon" />
       </div>
     );
@@ -216,9 +216,9 @@ function SubscriptionStatus() {
     <div
       className="w-44 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-3 transition-all duration-300 ease-out"
       style={{
-        background: isHovered ? "rgba(17,24,39,0.9)" : "rgba(17,24,39,0.85)",
-        WebkitBackdropFilter: "blur(20px)",
-        backdropFilter: "blur(20px)",
+        background: "rgba(255,255,255,0.05)",
+        WebkitBackdropFilter: "blur(12px)",
+        backdropFilter: "blur(12px)",
         border: `1px solid ${isHovered ? colors.hoverBorderColor : colors.borderColor}`,
         boxShadow: isHovered
           ? `0 10px 25px -5px ${colors.hoverShadowColor}, 0 8px 10px -6px ${colors.hoverShadowColor}`
@@ -301,7 +301,7 @@ function OperatorSubscriptionStatus() {
 
   if (isLoading) {
     return (
-      <div className="w-44 h-20 rounded-xl flex items-center justify-center" style={{ background: "rgba(17,24,39,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+      <div className="w-44 h-20 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)" }}>
         <LoadingSpinner size="sm" color="neon" />
       </div>
     );
@@ -311,9 +311,9 @@ function OperatorSubscriptionStatus() {
     <div
       className="w-44 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-3 transition-all duration-300 ease-out"
       style={{
-        background: isHovered ? "rgba(17,24,39,0.9)" : "rgba(17,24,39,0.85)",
-        WebkitBackdropFilter: "blur(20px)",
-        backdropFilter: "blur(20px)",
+        background: "rgba(255,255,255,0.05)",
+        WebkitBackdropFilter: "blur(12px)",
+        backdropFilter: "blur(12px)",
         border: `1px solid ${isHovered ? colors.hoverBorderColor : colors.borderColor}`,
         boxShadow: isHovered
           ? `0 10px 25px -5px ${colors.hoverShadowColor}, 0 8px 10px -6px ${colors.hoverShadowColor}`
