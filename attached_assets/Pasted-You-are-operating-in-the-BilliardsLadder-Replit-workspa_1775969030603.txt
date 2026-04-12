@@ -1,0 +1,64 @@
+You are operating in the BilliardsLadder Replit workspace.
+
+Goal:
+Ensure runtime is on commit d428118 and prove subscription post-checkout endpoints work.
+
+Do these steps exactly:
+
+1) Sync runtime to commit
+- Fetch latest origin/main
+- Reset local working tree to origin/main
+- Print:
+  - git rev-parse --short HEAD
+  - git log --oneline -n 3
+- Confirm HEAD includes commit d428118
+
+2) Restart backend process
+- Stop current server
+- Start server using the normal project startup command
+- Wait until server is accepting requests
+- Print startup command used and first healthy log lines
+
+3) Route existence checks (unauth + auth expectations)
+- Verify route exists in code:
+  - server/routes.ts contains registerPlayerBillingRoutes(app)
+  - server/services/playerBilling.ts contains app.post("/api/player-billing/verify-session", ...)
+- Runtime check:
+  - POST /api/player-billing/verify-session without auth should return 401/403 (NOT 404)
+- Print status + response JSON
+
+4) Authenticated smoke test using real session_id
+Use:
+cs_test_b1GFvDyKUjd4Pf3yckWb9XzwsF1Itu0ldFxwSkGH6n3GLk7mFBsnA4h4TS
+
+Run and print full responses:
+- POST /api/player-billing/verify-session
+  body: {"sessionId":"<above_session_id>"}
+- GET /api/player-billing/status
+
+For each request print:
+- URL
+- HTTP status
+- Response JSON
+
+5) DB verification
+Query and print row(s) from membership_subscriptions for the authenticated player:
+- id, player_id, tier, status, stripe_subscription_id, current_period_start, current_period_end, created_at
+Also print players.member for that player.
+
+6) Pass/fail criteria
+PASS if:
+- verify-session is not 404
+- verify-session returns hasSubscription true
+- status returns hasSubscription true
+- membership_subscriptions has active row
+
+Output format (strict):
+A) RUNNING_COMMIT
+B) SERVER_RESTART_EVIDENCE
+C) ROUTE_EXISTENCE_CHECK
+D) VERIFY_SESSION_RESULT
+E) BILLING_STATUS_RESULT
+F) DB_RESULT
+G) FINAL_RESULT (PASS or FAIL)
+H) IF_FAIL_ROOT_CAUSE (one paragraph + exact file/line fix)
