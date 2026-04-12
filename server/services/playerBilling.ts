@@ -400,20 +400,31 @@ export function registerPlayerBillingRoutes(app: Express) {
       }
 
       let stripeSubId = session.subscription as string || null;
-      let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const defaultPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      let periodEnd = defaultPeriodEnd;
       let tier = session.metadata?.tier || null;
 
       if (stripeSubId) {
         try {
           console.log(`📦 Retrieving subscription ${stripeSubId} from Stripe...`);
           const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
-          periodEnd = new Date(stripeSub.current_period_end * 1000);
+          const rawEnd = stripeSub.current_period_end;
+          console.log(`📦 raw current_period_end value: ${rawEnd} (type: ${typeof rawEnd})`);
+          if (rawEnd && typeof rawEnd === "number" && rawEnd > 0) {
+            const candidateDate = new Date(rawEnd * 1000);
+            if (!isNaN(candidateDate.getTime())) {
+              periodEnd = candidateDate;
+            } else {
+              console.warn(`⚠️ Invalid Date from current_period_end=${rawEnd}, using default`);
+            }
+          }
           if (!tier) {
             tier = stripeSub.metadata?.tier || null;
           }
           console.log(`✅ Subscription period ends: ${periodEnd.toISOString()}`);
         } catch (err) {
           console.error(`⚠️  Failed to retrieve subscription:`, err);
+          periodEnd = defaultPeriodEnd;
         }
       }
 
