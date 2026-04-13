@@ -266,12 +266,6 @@ export default function OperatorSubscriptions() {
 
           return (
             <TierCard key={tier.key} tier={tier} isCurrentTier={isCurrentTier}>
-              {isCurrentTier && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-emerald-500 text-white px-3">Current Plan</Badge>
-                </div>
-              )}
-
               <CardHeader className="text-center space-y-3 pb-2">
                 <div className="flex justify-center">
                   <div className={`p-3 rounded-full ${tier.bgColor}`}>
@@ -392,19 +386,22 @@ function TierCard({ tier, isCurrentTier, children }: { tier: HallTier; isCurrent
 
   return (
     <div
-      className={`relative flex flex-col rounded-xl transition-all duration-300 ease-out ${
-        isCurrentTier ? tier.bgColor : ""
-      }`}
+      className="relative flex flex-col rounded-xl transition-all duration-300 ease-out"
       style={{
-        border: `1px solid ${isHovered ? tier.hoverBorderColor : tier.borderColor}`,
+        border: `1px solid ${isHovered ? tier.hoverBorderColor : isCurrentTier ? "rgba(16,185,129,0.6)" : tier.borderColor}`,
         boxShadow: isHovered ? tier.hoverShadow : "none",
         transform: isHovered ? "scale(1.03)" : "scale(1)",
-        background: isCurrentTier ? undefined : "rgb(17,24,39)",
+        background: isCurrentTier ? "rgba(16,185,129,0.05)" : "rgb(17,24,39)",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       data-testid={`card-tier-${tier.key}`}
     >
+      {isCurrentTier && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+          <Badge className="bg-emerald-500 text-white px-3">Current Plan</Badge>
+        </div>
+      )}
       {children}
     </div>
   );
