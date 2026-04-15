@@ -35,6 +35,11 @@ export const users = pgTable("users", {
   globalRole: text("global_role").notNull().default("PLAYER"),
   role: text("role").default("player"), // player, operator, admin for side betting
   
+  // Email verification
+  emailVerified: boolean("email_verified").default(false),
+  verificationToken: text("verification_token"),
+  verificationTokenExpiry: timestamp("verification_token_expiry"),
+
   // Profile and status
   profileComplete: boolean("profile_complete").default(false),
   onboardingComplete: boolean("onboarding_complete").default(false),

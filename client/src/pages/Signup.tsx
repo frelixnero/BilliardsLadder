@@ -73,17 +73,15 @@ export default function Signup() {
   });
 
   // Operator signup mutation
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+
   const operatorSignupMutation = useMutation({
     mutationFn: (data: OperatorFormData) => apiRequest("/api/auth/signup-operator", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    onSuccess: () => {
-      toast({
-        title: "Account Created!",
-        description: "Your pool hall operator account has been created successfully.",
-      });
-      window.location.href = "/login";
+    onSuccess: (_data: any, variables: OperatorFormData) => {
+      setPendingVerificationEmail(variables.email);
     },
     onError: (error: any) => {
       toast({
@@ -94,18 +92,13 @@ export default function Signup() {
     },
   });
 
-  // Player signup mutation
   const playerSignupMutation = useMutation({
     mutationFn: (data: PlayerFormData) => apiRequest("/api/auth/signup-player", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    onSuccess: () => {
-      toast({
-        title: "Account Created!",
-        description: "Your player account has been created successfully.",
-      });
-      window.location.href = "/login";
+    onSuccess: (_data: any, variables: PlayerFormData) => {
+      setPendingVerificationEmail(variables.email);
     },
     onError: (error: any) => {
       toast({
@@ -129,12 +122,60 @@ export default function Signup() {
     window.location.href = "/api/login";
   };
 
+  const resendMutation = useMutation({
+    mutationFn: (emailAddr: string) => apiRequest("/api/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email: emailAddr }),
+    }),
+    onSuccess: () => {
+      toast({ title: "Sent!", description: "Check your inbox for a new verification link." });
+    },
+  });
+
+  if (pendingVerificationEmail) {
+    return (
+      <div className="min-h-screen bg-felt-dark flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-black/60 backdrop-blur-sm border border-emerald-400/20 shadow-xl">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <Mail className="h-8 w-8 text-emerald-400" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-emerald-300" data-testid="text-check-email-title">
+              Check Your Email
+            </CardTitle>
+            <p className="text-gray-400 text-sm">
+              We've sent a verification link to{" "}
+              <span className="text-white font-medium">{pendingVerificationEmail}</span>.
+              Click the link in the email to verify your account, then you can log in.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              onClick={() => resendMutation.mutate(pendingVerificationEmail)}
+              variant="outline"
+              className="w-full border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-300"
+              disabled={resendMutation.isPending}
+              data-testid="button-resend-signup"
+            >
+              {resendMutation.isPending ? "Sending..." : "Resend Verification Email"}
+            </Button>
+            <Link href="/login">
+              <Button variant="ghost" className="w-full text-gray-400 hover:text-white" data-testid="button-go-login-after-signup">
+                Go to Login
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-felt-dark flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-black/60 backdrop-blur-sm border border-emerald-400/20 shadow-xl">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-2xl font-bold text-emerald-300">
-            Join ActionLadder
+            Join BilliardsLadder
           </CardTitle>
           <p className="text-gray-400 text-sm">
             Create your account to start competing

@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import { storage } from "../storage";
 import { 
   hashPassword, 
@@ -16,6 +17,21 @@ import {
   createPlayerSchema, 
   loginSchema 
 } from "@shared/schema";
+import { emailService } from "../services/email-service";
+
+function generateVerificationToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function getAppBaseUrl(): string {
+  if (process.env.NODE_ENV !== "production") {
+    const replitDomain = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
+    if (replitDomain) {
+      return `https://${replitDomain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+    }
+  }
+  return (process.env.APP_BASE_URL || "http://localhost:5000").replace(/\/+$/, "");
+}
 
 // Password-based login for all user types
 export async function login(req: Request, res: Response) {
@@ -41,6 +57,15 @@ export async function login(req: Request, res: Response) {
     if (!passwordValid) {
       await incrementLoginAttempts(email);
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Check email verification (skip for OWNER/STAFF who are created by admins)
+    if (user.emailVerified === false && user.globalRole !== "OWNER" && user.globalRole !== "STAFF") {
+      return res.status(403).json({
+        message: "Please verify your email address before logging in.",
+        emailNotVerified: true,
+        email: user.email,
+      });
     }
 
     // Check 2FA if enabled
@@ -145,7 +170,9 @@ export async function signupOperator(req: Request, res: Response) {
     // Hash the password from the signup form
     const passwordHash = await hashPassword(operatorData.password);
 
-    // Create operator account
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const newUser = await storage.createUser({
       email: operatorData.email,
       name: operatorData.name,
@@ -155,13 +182,20 @@ export async function signupOperator(req: Request, res: Response) {
       city: operatorData.city,
       state: operatorData.state,
       subscriptionTier: operatorData.subscriptionTier,
-      accountStatus: "active", // Changed from "pending"
+      accountStatus: "active",
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExpiry,
       onboardingComplete: false,
       profileComplete: false,
     });
 
-    // TODO: Create Stripe subscription based on tier
-    // This would integrate with Stripe API to create subscription
+    emailService.sendVerificationEmail(
+      operatorData.email,
+      verificationToken,
+      operatorData.name,
+      getAppBaseUrl()
+    ).catch(err => console.error("Failed to send verification email:", err));
 
     res.status(201).json({
       user: {
@@ -172,7 +206,8 @@ export async function signupOperator(req: Request, res: Response) {
         hallName: newUser.hallName,
         subscriptionTier: newUser.subscriptionTier,
       },
-      message: "Account created successfully! You can now log in with your credentials."
+      message: "Account created! Please check your email to verify your address before logging in.",
+      requiresVerification: true,
     });
     
   } catch (error: any) {
@@ -191,21 +226,24 @@ export async function signupPlayer(req: Request, res: Response) {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    // Hash the password from the signup form
     const passwordHash = await hashPassword(playerData.password);
 
-    // Create player account
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const newUser = await storage.createUser({
       email: playerData.email,
       name: playerData.name,
       globalRole: "PLAYER",
       passwordHash,
-      accountStatus: "active", // Changed from "pending"
+      accountStatus: "active",
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExpiry,
       onboardingComplete: false,
       profileComplete: false,
     });
 
-    // Create player profile
     const player = await storage.createPlayer({
       name: playerData.name,
       userId: newUser.id,
@@ -213,6 +251,13 @@ export async function signupPlayer(req: Request, res: Response) {
       isRookie: playerData.tier === "rookie",
       rookiePassActive: playerData.tier === "rookie",
     });
+
+    emailService.sendVerificationEmail(
+      playerData.email,
+      verificationToken,
+      playerData.name,
+      getAppBaseUrl()
+    ).catch(err => console.error("Failed to send verification email:", err));
 
     res.status(201).json({
       user: {
@@ -227,7 +272,8 @@ export async function signupPlayer(req: Request, res: Response) {
         tier: playerData.tier,
         membershipTier: player.membershipTier,
       },
-      message: "Account created successfully! You can now log in with your credentials."
+      message: "Account created! Please check your email to verify your address before logging in.",
+      requiresVerification: true,
     });
     
   } catch (error: any) {
@@ -267,6 +313,7 @@ export async function getCurrentUser(req: Request, res: Response) {
       subscriptionTier: dbUser.subscriptionTier,
       accountStatus: dbUser.accountStatus,
       onboardingComplete: dbUser.onboardingComplete,
+      emailVerified: dbUser.emailVerified ?? true,
     });
     
   } catch (error: any) {
@@ -358,7 +405,8 @@ export async function authMe(req: Request, res: Response) {
       state: dbUser.state,
       subscriptionTier: dbUser.subscriptionTier,
       accountStatus: dbUser.accountStatus,
-      onboardingComplete: dbUser.onboardingComplete
+      onboardingComplete: dbUser.onboardingComplete,
+      emailVerified: dbUser.emailVerified ?? true,
     });
   } catch (error) {
     console.error("Auth me error:", error);
@@ -485,5 +533,72 @@ export async function assignRole(req: Request, res: Response) {
     res.json({ success: true, message: "Role assigned successfully" });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+}
+
+export async function verifyEmail(req: Request, res: Response) {
+  try {
+    const { token } = req.query;
+    if (!token || typeof token !== "string") {
+      return res.redirect("/verify-email?status=invalid");
+    }
+
+    const user = await storage.getUserByVerificationToken(token);
+    if (!user) {
+      return res.redirect("/verify-email?status=invalid");
+    }
+
+    if (user.verificationTokenExpiry && new Date(user.verificationTokenExpiry) < new Date()) {
+      return res.redirect("/verify-email?status=expired&email=" + encodeURIComponent(user.email));
+    }
+
+    await storage.updateUser(user.id, {
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+    });
+
+    return res.redirect("/verify-email?status=success");
+  } catch (error: any) {
+    console.error("Email verification error:", error);
+    return res.redirect("/verify-email?status=error");
+  }
+}
+
+export async function resendVerification(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      return res.json({ message: "If an account exists with that email, a verification link has been sent." });
+    }
+
+    if (user.emailVerified) {
+      return res.json({ message: "Email is already verified. You can log in." });
+    }
+
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await storage.updateUser(user.id, {
+      verificationToken,
+      verificationTokenExpiry,
+    });
+
+    await emailService.sendVerificationEmail(
+      email,
+      verificationToken,
+      user.name || undefined,
+      getAppBaseUrl()
+    );
+
+    res.json({ message: "If an account exists with that email, a verification link has been sent." });
+  } catch (error: any) {
+    console.error("Resend verification error:", error);
+    res.status(500).json({ message: "Failed to resend verification email" });
   }
 }

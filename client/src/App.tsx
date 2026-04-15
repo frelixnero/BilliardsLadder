@@ -51,6 +51,7 @@ import TrusteeLogin from "@/pages/TrusteeLogin";
 import Signup from "@/pages/Signup";
 import SelectRole from "@/pages/SelectRole";
 import ForgotPassword from "@/pages/ForgotPassword";
+import VerifyEmail from "@/pages/VerifyEmail";
 import BillingSuccess from "@/pages/BillingSuccess";
 import BillingCancel from "@/pages/BillingCancel";
 import { PlayerSubscription } from "@/pages/PlayerSubscription";
@@ -454,6 +455,9 @@ function App() {
                 </Route>
                 <Route path="/forgot-password">
                   <ForgotPassword />
+                </Route>
+                <Route path="/verify-email">
+                  <VerifyEmail />
                 </Route>
                 <Route path="/billing/success">
                   <BillingSuccess />

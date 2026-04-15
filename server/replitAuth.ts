@@ -70,6 +70,7 @@ async function upsertUser(
     id: claims["sub"],
     email: claims["email"],
     name: `${claims["first_name"] || ""} ${claims["last_name"] || ""}`.trim() || claims["email"] || "Unknown User",
+    emailVerified: true,
   });
 }
 

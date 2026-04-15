@@ -14,4 +14,6 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/change-password", authController.changePassword);
   app.get("/api/auth/user", authController.getCurrentUser);
   app.post("/api/auth/assign-role", requireStaffOrOwner, authController.assignRole);
+  app.get("/api/auth/verify-email", authController.verifyEmail);
+  app.post("/api/auth/resend-verification", authController.resendVerification);
 }

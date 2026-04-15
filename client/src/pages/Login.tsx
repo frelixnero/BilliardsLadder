@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Eye, EyeOff, Mail, Lock, LogIn, Chrome } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, LogIn, Chrome, MailCheck, RefreshCw } from "lucide-react";
 import { z } from "zod";
 import { Link } from "wouter";
 
@@ -25,6 +25,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<LoginFormData>({
@@ -68,9 +69,22 @@ export default function Login() {
       }
     },
     onError: (error: any) => {
+      const errMsg = error?.message || "";
+      try {
+        const jsonPart = errMsg.substring(errMsg.indexOf("{"));
+        const parsed = JSON.parse(jsonPart);
+        if (parsed.emailNotVerified) {
+          setUnverifiedEmail(parsed.email || form.getValues("email"));
+          return;
+        }
+      } catch {}
+      if (errMsg.includes("verify your email")) {
+        setUnverifiedEmail(form.getValues("email"));
+        return;
+      }
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid email or password",
+        description: errMsg.includes(":") ? errMsg.split(": ").slice(1).join(": ") : errMsg || "Invalid email or password",
         variant: "destructive",
       });
     },
@@ -80,10 +94,70 @@ export default function Login() {
     loginMutation.mutate(data);
   };
 
-  // Google login via Replit Auth
+  const resendMutation = useMutation({
+    mutationFn: (email: string) => apiRequest("/api/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+    onSuccess: () => {
+      toast({
+        title: "Verification Email Sent",
+        description: "Please check your inbox for the verification link.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to Resend",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleGoogleLogin = () => {
     window.location.href = "/api/login";
   };
+
+  if (unverifiedEmail) {
+    return (
+      <div className="min-h-screen bg-felt-dark flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-black/60 backdrop-blur-sm border border-emerald-400/20 shadow-xl">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <MailCheck className="h-8 w-8 text-amber-400" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-amber-300" data-testid="text-verify-title">
+              Email Verification Required
+            </CardTitle>
+            <p className="text-gray-400 text-sm">
+              We sent a verification link to <span className="text-white font-medium">{unverifiedEmail}</span>.
+              Please check your inbox and click the link to verify your email before logging in.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => resendMutation.mutate(unverifiedEmail)}
+              variant="outline"
+              className="w-full border-amber-500/30 hover:bg-amber-500/10 text-amber-300"
+              disabled={resendMutation.isPending}
+              data-testid="button-resend-verification"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${resendMutation.isPending ? "animate-spin" : ""}`} />
+              {resendMutation.isPending ? "Sending..." : "Resend Verification Email"}
+            </Button>
+            <Button
+              onClick={() => setUnverifiedEmail(null)}
+              variant="ghost"
+              className="w-full text-gray-400 hover:text-white"
+              data-testid="button-back-to-login"
+            >
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-felt-dark flex items-center justify-center p-4">
@@ -93,7 +167,7 @@ export default function Login() {
             Welcome Back
           </CardTitle>
           <p className="text-gray-400 text-sm">
-            Sign in to your ActionLadder account
+            Sign in to your BilliardsLadder account
           </p>
         </CardHeader>
         <CardContent className="space-y-6">

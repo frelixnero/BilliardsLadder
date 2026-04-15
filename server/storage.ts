@@ -327,6 +327,7 @@ export interface IStorage {
   // Users (for platform management)
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
   getUserByStripeConnectId(stripeConnectId: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   getStaffUsers(): Promise<User[]>;
@@ -1100,6 +1101,10 @@ export class MemStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.verificationToken === token);
   }
 
   async getUserByStripeConnectId(stripeConnectId: string): Promise<User | undefined> {
@@ -5615,6 +5620,11 @@ export class DatabaseStorage implements IStorage {
     return results[0];
   }
 
+  async getUserByVerificationToken(token: string): Promise<any | undefined> {
+    const results = await db.select().from(usersTable).where(eq(usersTable.verificationToken, token));
+    return results[0];
+  }
+
   async createUser(user: any): Promise<any> {
     const safeUser = this.sanitizeUserFields(user);
     const results = await db.insert(usersTable).values(safeUser).returning();
@@ -5650,7 +5660,8 @@ export class DatabaseStorage implements IStorage {
       "phoneNumber", "lastLoginAt", "loginAttempts", "lockedUntil", "globalRole",
       "role", "profileComplete", "onboardingComplete", "accountStatus",
       "stripeCustomerId", "stripeConnectId", "payoutShareBps", "hallName",
-      "city", "state", "subscriptionTier", "trusteeId", "createdAt", "updatedAt"
+      "city", "state", "subscriptionTier", "trusteeId", "createdAt", "updatedAt",
+      "emailVerified", "verificationToken", "verificationTokenExpiry"
     ];
     const sanitized: any = {};
     for (const key of validColumns) {
