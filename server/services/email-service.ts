@@ -22,7 +22,7 @@ interface OnboardingEmailData {
   platformUrl: string;
 }
 
-const DEFAULT_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'ositafelix1212@gmail.com';
+const DEFAULT_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'osiraogene@gmail.com';
 const DEFAULT_FROM_NAME = 'BilliardsLadder';
 
 class EmailService {
