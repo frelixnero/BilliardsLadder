@@ -25,6 +25,7 @@ import { setupQRRoutes } from "./routes/qr.routes";
 import { setupLeagueRoutes } from "./routes/league.routes";
 import { setupRookieRoutes } from "./routes/rookie.routes";
 import { setupCheckinRoutes } from "./routes/checkin.routes";
+import { setupBanAppealRoutes } from "./routes/banAppeal.routes";
 import { initializeFeeScheduler } from "./services/feeScheduler";
 import { initializeSocketManager } from "./services/challengeSocketEvents";
 import { registerAdminRoutes, registerOperatorRoutes } from "./routes/admin.routes";
@@ -143,6 +144,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register support routes (support requests)
   setupSupportRoutes(app, storage);
+
+  // Register ban appeal routes (public appeal submission and status check)
+  setupBanAppealRoutes(app);
 
   // Register stream routes (live streams)
   setupStreamRoutes(app, storage);
