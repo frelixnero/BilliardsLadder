@@ -981,7 +981,6 @@ export interface IStorage {
   getAllBanAppeals(): Promise<BanAppeal[]>;
   createBanAppeal(appeal: InsertBanAppeal): Promise<BanAppeal>;
   updateBanAppeal(id: string, updates: Partial<BanAppeal>): Promise<BanAppeal | undefined>;
-
 }
 
 export class MemStorage implements IStorage {
@@ -6639,7 +6638,7 @@ export class DatabaseStorage implements IStorage {
   async markDistributionCompleted(...args: any[]): Promise<any> { return (this.memStorage as any).markDistributionCompleted(...args); }
   async markDistributionFailed(...args: any[]): Promise<any> { return (this.memStorage as any).markDistributionFailed(...args); }
 
-  // === BAN APPEALS ===
+  // === BAN APPEALS (persisted in database via Drizzle ORM) ===
   async getBanAppeal(id: string): Promise<BanAppeal | undefined> {
     const results = await db.select().from(banAppealsTable).where(eq(banAppealsTable.id, id));
     return results[0];
