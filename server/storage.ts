@@ -79,6 +79,8 @@ import {
   type PrizePool, type InsertPrizePool,
   type PrizePoolContribution, type InsertPrizePoolContribution,
   type PrizePoolDistribution, type InsertPrizePoolDistribution,
+  type BanAppeal, type InsertBanAppeal,
+  banAppeals as banAppealsTable,
   insertUserSchema,
   insertOrganizationSchema,
   insertPayoutTransferSchema,
@@ -972,6 +974,14 @@ export interface IStorage {
   unlockHallBattles(hallId: string, unlockedBy: string): Promise<PoolHall | undefined>;
   lockHallBattles(hallId: string): Promise<PoolHall | undefined>;
 
+  // Ban Appeals
+  getBanAppeal(id: string): Promise<BanAppeal | undefined>;
+  getBanAppealsByUser(userId: string): Promise<BanAppeal[]>;
+  getBanAppealsByStatus(status: string): Promise<BanAppeal[]>;
+  getAllBanAppeals(): Promise<BanAppeal[]>;
+  createBanAppeal(appeal: InsertBanAppeal): Promise<BanAppeal>;
+  updateBanAppeal(id: string, updates: Partial<BanAppeal>): Promise<BanAppeal | undefined>;
+
 }
 
 export class MemStorage implements IStorage {
@@ -1086,6 +1096,9 @@ export class MemStorage implements IStorage {
   private jobQueue = new Map<string, JobQueue>();
   private systemMetrics = new Map<string, SystemMetric>();
   private systemAlerts = new Map<string, SystemAlert>();
+
+  // === BAN APPEALS ===
+  private banAppeals = new Map<string, BanAppeal>();
 
   constructor() {
     // Initialize with seed data for demonstration (disabled in production)
@@ -5571,6 +5584,52 @@ export class MemStorage implements IStorage {
     throw new Error("Training analytics requires database storage. Please use DatabaseStorage implementation.");
   }
 
+  // === BAN APPEALS ===
+  async getBanAppeal(id: string): Promise<BanAppeal | undefined> {
+    return this.banAppeals.get(id);
+  }
+
+  async getBanAppealsByUser(userId: string): Promise<BanAppeal[]> {
+    return Array.from(this.banAppeals.values()).filter(a => a.userId === userId);
+  }
+
+  async getBanAppealsByStatus(status: string): Promise<BanAppeal[]> {
+    return Array.from(this.banAppeals.values()).filter(a => a.status === status);
+  }
+
+  async getAllBanAppeals(): Promise<BanAppeal[]> {
+    return Array.from(this.banAppeals.values()).sort((a, b) =>
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
+  }
+
+  async createBanAppeal(appeal: InsertBanAppeal): Promise<BanAppeal> {
+    const id = randomUUID();
+    const record: BanAppeal = {
+      id,
+      userId: appeal.userId,
+      userEmail: appeal.userEmail,
+      userName: appeal.userName || null,
+      reason: appeal.reason,
+      supportingContext: appeal.supportingContext || null,
+      status: appeal.status || "pending",
+      adminResponse: appeal.adminResponse || null,
+      reviewedBy: appeal.reviewedBy || null,
+      reviewedAt: null,
+      createdAt: new Date(),
+    };
+    this.banAppeals.set(id, record);
+    return record;
+  }
+
+  async updateBanAppeal(id: string, updates: Partial<BanAppeal>): Promise<BanAppeal | undefined> {
+    const cur = this.banAppeals.get(id);
+    if (!cur) return undefined;
+    const updated = { ...cur, ...updates };
+    this.banAppeals.set(id, updated);
+    return updated;
+  }
+
 }
 
 // Database storage implementation using Drizzle ORM
@@ -6579,6 +6638,34 @@ export class DatabaseStorage implements IStorage {
   async updatePrizePoolDistribution(...args: any[]): Promise<any> { return (this.memStorage as any).updatePrizePoolDistribution(...args); }
   async markDistributionCompleted(...args: any[]): Promise<any> { return (this.memStorage as any).markDistributionCompleted(...args); }
   async markDistributionFailed(...args: any[]): Promise<any> { return (this.memStorage as any).markDistributionFailed(...args); }
+
+  // === BAN APPEALS ===
+  async getBanAppeal(id: string): Promise<BanAppeal | undefined> {
+    const results = await db.select().from(banAppealsTable).where(eq(banAppealsTable.id, id));
+    return results[0];
+  }
+
+  async getBanAppealsByUser(userId: string): Promise<BanAppeal[]> {
+    return await db.select().from(banAppealsTable).where(eq(banAppealsTable.userId, userId)).orderBy(desc(banAppealsTable.createdAt));
+  }
+
+  async getBanAppealsByStatus(status: string): Promise<BanAppeal[]> {
+    return await db.select().from(banAppealsTable).where(eq(banAppealsTable.status, status)).orderBy(desc(banAppealsTable.createdAt));
+  }
+
+  async getAllBanAppeals(): Promise<BanAppeal[]> {
+    return await db.select().from(banAppealsTable).orderBy(desc(banAppealsTable.createdAt));
+  }
+
+  async createBanAppeal(appeal: InsertBanAppeal): Promise<BanAppeal> {
+    const results = await db.insert(banAppealsTable).values(appeal).returning();
+    return results[0];
+  }
+
+  async updateBanAppeal(id: string, updates: Partial<BanAppeal>): Promise<BanAppeal | undefined> {
+    const results = await db.update(banAppealsTable).set(updates).where(eq(banAppealsTable.id, id)).returning();
+    return results[0];
+  }
 
 }
 

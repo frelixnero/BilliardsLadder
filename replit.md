@@ -66,6 +66,16 @@ The system is built on a modern web stack designed for performance, scalability,
 - Email notifications sent on ban/suspend/unban (via SendGrid)
 - Admin dashboard "Users & Bans" tab with search, ban dialog, and banned users list
 
+### Ban Appeal System
+- `banAppeals` table: id, userId, userEmail, userName, reason, supportingContext, status (pending/approved/denied), adminResponse, reviewedBy, reviewedAt, createdAt
+- Appeal endpoints: `POST /api/appeals` (public, no auth required since banned users can't authenticate), `GET /api/admin/appeals`, `GET /api/admin/appeals/user/:userId`, `POST /api/admin/appeals/:id/review`
+- Banned/suspended users see ban notification screen at login with "Appeal This Decision" button
+- Appeal form captures reason and optional supporting context
+- Only one pending appeal allowed per user at a time
+- Admin dashboard "Appeals" tab shows pending/all appeals with approve/deny actions and optional admin response
+- Approving an appeal automatically reinstates the user (sets accountStatus to "active", clears ban fields)
+- Email notifications sent to admins on appeal submission, and to users on approval/denial
+
 ### Email Verification
 - Uses SendGrid API (`@sendgrid/mail`) with `SENDGRID_API_KEY` secret
 - From address: `osiraogene@gmail.com` (verified Single Sender in SendGrid)

@@ -19,6 +19,32 @@ import {
 } from "@shared/schema";
 import { emailService } from "../services/email-service";
 
+const APPEAL_TOKEN_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
+const APPEAL_TOKEN_EXPIRY_MS = 30 * 60 * 1000;
+
+export function generateAppealToken(userId: string): string {
+  const expiresAt = Date.now() + APPEAL_TOKEN_EXPIRY_MS;
+  const payload = `${userId}:${expiresAt}`;
+  const signature = crypto.createHmac("sha256", APPEAL_TOKEN_SECRET).update(payload).digest("hex");
+  return Buffer.from(`${payload}:${signature}`).toString("base64");
+}
+
+export function verifyAppealToken(token: string): { valid: boolean; userId?: string } {
+  try {
+    const decoded = Buffer.from(token, "base64").toString("utf-8");
+    const parts = decoded.split(":");
+    if (parts.length !== 3) return { valid: false };
+    const [userId, expiresAtStr, signature] = parts;
+    const expiresAt = parseInt(expiresAtStr, 10);
+    if (isNaN(expiresAt) || Date.now() > expiresAt) return { valid: false };
+    const expectedSig = crypto.createHmac("sha256", APPEAL_TOKEN_SECRET).update(`${userId}:${expiresAtStr}`).digest("hex");
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) return { valid: false };
+    return { valid: true, userId };
+  } catch {
+    return { valid: false };
+  }
+}
+
 function generateVerificationToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
@@ -61,9 +87,12 @@ export async function login(req: Request, res: Response) {
 
     // Check ban/suspension status
     if (user.accountStatus === "banned") {
+      const appealToken = generateAppealToken(user.id);
       return res.status(403).json({
         message: "Your account has been banned.",
         accountBanned: true,
+        userId: user.id,
+        appealToken,
         banReason: user.banReason || "No reason provided.",
       });
     }
@@ -78,9 +107,12 @@ export async function login(req: Request, res: Response) {
           banExpiresAt: null,
         });
       } else {
+        const appealToken = generateAppealToken(user.id);
         return res.status(403).json({
           message: "Your account is suspended.",
           accountSuspended: true,
+          userId: user.id,
+          appealToken,
           banReason: user.banReason || "No reason provided.",
           banExpiresAt: user.banExpiresAt,
         });

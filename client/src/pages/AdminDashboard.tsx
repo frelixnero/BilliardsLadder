@@ -12,7 +12,7 @@ import HallBattlesAdmin from "@/components/hall-battles-admin";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, DollarSign, Shield, TrendingUp, Trophy, Settings, Gift, Ban, ShieldOff, ShieldCheck } from "lucide-react";
+import { Users, DollarSign, Shield, TrendingUp, Trophy, Settings, Gift, Ban, ShieldOff, ShieldCheck, MessageSquare, Check, X } from "lucide-react";
 
 interface User {
   id: string;
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="staff" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8 bg-black/40">
+        <TabsList className="grid w-full grid-cols-9 bg-black/40">
           <TabsTrigger value="staff" className="data-[state=active]:bg-green-600">
             <Users className="w-4 h-4 mr-2" />
             Staff
@@ -213,6 +213,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="user-management" className="data-[state=active]:bg-green-600" data-testid="tab-user-management">
             <Ban className="w-4 h-4 mr-2" />
             Users & Bans
+          </TabsTrigger>
+          <TabsTrigger value="appeals" className="data-[state=active]:bg-green-600" data-testid="tab-appeals">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Appeals
           </TabsTrigger>
           <TabsTrigger value="organizations" className="data-[state=active]:bg-green-600">
             <Shield className="w-4 h-4 mr-2" />
@@ -366,6 +370,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="user-management" className="space-y-6">
           <UserManagementPanel />
+        </TabsContent>
+
+        <TabsContent value="appeals" className="space-y-6">
+          <AppealsPanel />
         </TabsContent>
 
         <TabsContent value="organizations" className="space-y-6">
@@ -1190,6 +1198,256 @@ function UserManagementPanel() {
               data-testid="button-confirm-ban"
             >
               {banMutation.isPending || suspendMutation.isPending ? "Processing..." : banType === "ban" ? "Ban User" : "Suspend User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+interface Appeal {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName?: string;
+  reason: string;
+  supportingContext?: string;
+  status: string;
+  adminResponse?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  userAccountStatus?: string;
+  userGlobalRole?: string;
+}
+
+function AppealsPanel() {
+  const [activeFilter, setActiveFilter] = useState<"pending" | "all">("pending");
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedAppeal, setSelectedAppeal] = useState<Appeal | null>(null);
+  const [adminResponse, setAdminResponse] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: pendingAppeals, isLoading: loadingPending } = useQuery<Appeal[]>({
+    queryKey: ["/api/admin/appeals", "pending"],
+    queryFn: () => apiRequest("/api/admin/appeals?status=pending"),
+  });
+
+  const { data: allAppeals, isLoading: loadingAll } = useQuery<Appeal[]>({
+    queryKey: ["/api/admin/appeals", "all"],
+    queryFn: () => apiRequest("/api/admin/appeals"),
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: async ({ appealId, action, response }: { appealId: string; action: "approve" | "deny"; response: string }) => {
+      return apiRequest("/api/admin/appeals/" + appealId + "/review", {
+        method: "POST",
+        body: JSON.stringify({ action, adminResponse: response }),
+      });
+    },
+    onSuccess: (_: any, variables: { appealId: string; action: "approve" | "deny"; response: string }) => {
+      const actionText = variables.action === "approve" ? "approved" : "denied";
+      toast({ title: `Appeal ${actionText}`, description: `The appeal has been ${actionText} and the user has been notified.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/appeals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bans"] });
+      closeReviewDialog();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed", description: error.message || "Failed to review appeal", variant: "destructive" });
+    },
+  });
+
+  function openReviewDialog(appeal: Appeal) {
+    setSelectedAppeal(appeal);
+    setAdminResponse("");
+    setReviewDialogOpen(true);
+  }
+
+  function closeReviewDialog() {
+    setReviewDialogOpen(false);
+    setSelectedAppeal(null);
+    setAdminResponse("");
+  }
+
+  const appeals = activeFilter === "pending" ? pendingAppeals : allAppeals;
+  const isLoading = activeFilter === "pending" ? loadingPending : loadingAll;
+
+  const statusBadge = (status: string) => {
+    if (status === "pending") return <Badge className="bg-amber-900/60 text-amber-300 border-amber-500/30">Pending</Badge>;
+    if (status === "approved") return <Badge className="bg-green-900/60 text-green-300 border-green-500/30">Approved</Badge>;
+    if (status === "denied") return <Badge className="bg-red-900/60 text-red-300 border-red-500/30">Denied</Badge>;
+    return <Badge className="bg-gray-800/60 text-gray-300 border-gray-500/30">{status}</Badge>;
+  };
+
+  return (
+    <>
+      <Card className="bg-black/60 border-green-600/30">
+        <CardHeader>
+          <CardTitle className="text-green-400 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Ban Appeals
+          </CardTitle>
+          <CardDescription className="text-gray-300">
+            Review and respond to ban/suspension appeals from users.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Button
+              variant={activeFilter === "pending" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("pending")}
+              className={activeFilter === "pending" ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-gray-600 text-gray-300"}
+              data-testid="button-filter-pending-appeals"
+            >
+              Pending ({pendingAppeals?.length || 0})
+            </Button>
+            <Button
+              variant={activeFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("all")}
+              className={activeFilter === "all" ? "bg-green-600 hover:bg-green-700 text-black" : "border-gray-600 text-gray-300"}
+              data-testid="button-filter-all-appeals"
+            >
+              All Appeals ({allAppeals?.length || 0})
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {isLoading ? (
+              <p className="text-gray-400">Loading appeals...</p>
+            ) : !appeals || appeals.length === 0 ? (
+              <p className="text-gray-400" data-testid="text-no-appeals">
+                {activeFilter === "pending" ? "No pending appeals." : "No appeals found."}
+              </p>
+            ) : (
+              appeals.map((appeal) => (
+                <div
+                  key={appeal.id}
+                  className="p-4 bg-black/30 rounded-lg border border-gray-700/50"
+                  data-testid={`row-appeal-${appeal.id}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-white font-medium">{appeal.userName || "Unknown User"}</p>
+                        <p className="text-gray-400 text-sm">{appeal.userEmail}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {statusBadge(appeal.status)}
+                        {appeal.userAccountStatus && (
+                          <Badge className={
+                            appeal.userAccountStatus === "banned"
+                              ? "bg-red-900/60 text-red-300 border-red-500/30"
+                              : appeal.userAccountStatus === "suspended"
+                              ? "bg-yellow-900/60 text-yellow-300 border-yellow-500/30"
+                              : "bg-green-900/60 text-green-300 border-green-500/30"
+                          }>
+                            {appeal.userAccountStatus}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {appeal.status === "pending" && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                          onClick={() => openReviewDialog(appeal)}
+                          data-testid={`button-review-appeal-${appeal.id}`}
+                        >
+                          Review
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-sm space-y-2">
+                    <div className="p-3 bg-black/40 rounded border border-gray-700/30">
+                      <p className="text-gray-400 text-xs mb-1">Appeal Reason:</p>
+                      <p className="text-gray-200">{appeal.reason}</p>
+                    </div>
+                    {appeal.supportingContext && (
+                      <div className="p-3 bg-black/40 rounded border border-gray-700/30">
+                        <p className="text-gray-400 text-xs mb-1">Supporting Context:</p>
+                        <p className="text-gray-300">{appeal.supportingContext}</p>
+                      </div>
+                    )}
+                    {appeal.adminResponse && (
+                      <div className="p-3 bg-black/40 rounded border border-gray-700/30">
+                        <p className="text-gray-400 text-xs mb-1">Admin Response:</p>
+                        <p className="text-gray-300">{appeal.adminResponse}</p>
+                      </div>
+                    )}
+                    <p className="text-gray-500 text-xs">
+                      Submitted: {new Date(appeal.createdAt).toLocaleString()}
+                      {appeal.reviewedAt && ` | Reviewed: ${new Date(appeal.reviewedAt).toLocaleString()}`}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-amber-400">Review Appeal</DialogTitle>
+          </DialogHeader>
+          {selectedAppeal && (
+            <div className="space-y-4">
+              <div className="p-3 bg-black/40 rounded-lg border border-gray-700">
+                <p className="text-white font-medium">{selectedAppeal.userName || "Unknown User"}</p>
+                <p className="text-gray-400 text-sm">{selectedAppeal.userEmail}</p>
+              </div>
+              <div className="p-3 bg-black/40 rounded-lg border border-gray-700">
+                <p className="text-gray-400 text-xs mb-1">Appeal Reason:</p>
+                <p className="text-gray-200 text-sm">{selectedAppeal.reason}</p>
+              </div>
+              {selectedAppeal.supportingContext && (
+                <div className="p-3 bg-black/40 rounded-lg border border-gray-700">
+                  <p className="text-gray-400 text-xs mb-1">Supporting Context:</p>
+                  <p className="text-gray-300 text-sm">{selectedAppeal.supportingContext}</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label className="text-gray-300">Response to User (optional)</Label>
+                <Textarea
+                  placeholder="Provide a response to the user explaining your decision..."
+                  value={adminResponse}
+                  onChange={(e) => setAdminResponse(e.target.value)}
+                  className="bg-black/40 border-gray-600 text-white min-h-[100px]"
+                  data-testid="input-appeal-admin-response"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={closeReviewDialog} className="border-gray-600 text-gray-300">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedAppeal && reviewMutation.mutate({ appealId: selectedAppeal.id, action: "deny", response: adminResponse })}
+              disabled={reviewMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              data-testid="button-deny-appeal"
+            >
+              <X className="w-4 h-4 mr-1" />
+              {reviewMutation.isPending ? "Processing..." : "Deny"}
+            </Button>
+            <Button
+              onClick={() => selectedAppeal && reviewMutation.mutate({ appealId: selectedAppeal.id, action: "approve", response: adminResponse })}
+              disabled={reviewMutation.isPending}
+              className="bg-green-600 hover:bg-green-700 text-white"
+              data-testid="button-approve-appeal"
+            >
+              <Check className="w-4 h-4 mr-1" />
+              {reviewMutation.isPending ? "Processing..." : "Approve"}
             </Button>
           </DialogFooter>
         </DialogContent>

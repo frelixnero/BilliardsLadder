@@ -2684,6 +2684,33 @@ export const playerEarningLedger = pgTable(
   ]
 );
 
+// Ban Appeals - Users can appeal bans/suspensions
+export const banAppeals = pgTable("ban_appeals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  userEmail: text("user_email").notNull(),
+  userName: text("user_name"),
+  reason: text("reason").notNull(),
+  supportingContext: text("supporting_context"),
+  status: text("status").notNull().default("pending"), // "pending", "approved", "denied"
+  adminResponse: text("admin_response"),
+  reviewedBy: text("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_ban_appeals_user").on(table.userId),
+  index("idx_ban_appeals_status").on(table.status),
+]);
+
+export const insertBanAppealSchema = createInsertSchema(banAppeals).omit({
+  id: true,
+  createdAt: true,
+  reviewedAt: true,
+});
+
+export type BanAppeal = typeof banAppeals.$inferSelect;
+export type InsertBanAppeal = z.infer<typeof insertBanAppealSchema>;
+
 export const insertServiceListingSchema = createInsertSchema(serviceListings).omit({
   id: true,
   bookingsCount: true,
