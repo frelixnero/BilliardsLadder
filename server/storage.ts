@@ -5661,7 +5661,8 @@ export class DatabaseStorage implements IStorage {
       "role", "profileComplete", "onboardingComplete", "accountStatus",
       "stripeCustomerId", "stripeConnectId", "payoutShareBps", "hallName",
       "city", "state", "subscriptionTier", "trusteeId", "createdAt", "updatedAt",
-      "emailVerified", "verificationToken", "verificationTokenExpiry"
+      "emailVerified", "verificationToken", "verificationTokenExpiry",
+      "banReason", "bannedAt", "bannedBy", "banExpiresAt"
     ];
     const sanitized: any = {};
     for (const key of validColumns) {

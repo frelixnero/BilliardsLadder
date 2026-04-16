@@ -59,6 +59,34 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // Check ban/suspension status
+    if (user.accountStatus === "banned") {
+      return res.status(403).json({
+        message: "Your account has been banned.",
+        accountBanned: true,
+        banReason: user.banReason || "No reason provided.",
+      });
+    }
+
+    if (user.accountStatus === "suspended") {
+      if (user.banExpiresAt && new Date(user.banExpiresAt) < new Date()) {
+        await storage.updateUser(user.id, {
+          accountStatus: "active",
+          banReason: null,
+          bannedAt: null,
+          bannedBy: null,
+          banExpiresAt: null,
+        });
+      } else {
+        return res.status(403).json({
+          message: "Your account is suspended.",
+          accountSuspended: true,
+          banReason: user.banReason || "No reason provided.",
+          banExpiresAt: user.banExpiresAt,
+        });
+      }
+    }
+
     // Check email verification (skip for OWNER/STAFF who are created by admins)
     if (user.emailVerified === false && user.globalRole !== "OWNER" && user.globalRole !== "STAFF") {
       return res.status(403).json({

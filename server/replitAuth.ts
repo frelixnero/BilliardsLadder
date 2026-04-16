@@ -254,7 +254,40 @@ export const requireStaffOrOwner: RequestHandler = async (req, res, next) => {
 
   try {
     const dbUser = await storage.getUser(userId);
-    if (!dbUser || !["STAFF", "OWNER"].includes(dbUser.globalRole || "")) {
+    if (!dbUser) {
+      return res.status(403).json({ message: "Staff or Owner access required" });
+    }
+
+    if (dbUser.accountStatus === "banned") {
+      req.logout(() => {});
+      return res.status(403).json({
+        message: "Your account has been banned.",
+        accountBanned: true,
+        banReason: dbUser.banReason || "No reason provided.",
+      });
+    }
+
+    if (dbUser.accountStatus === "suspended") {
+      if (dbUser.banExpiresAt && new Date(dbUser.banExpiresAt) < new Date()) {
+        await storage.updateUser(dbUser.id, {
+          accountStatus: "active",
+          banReason: null,
+          bannedAt: null,
+          bannedBy: null,
+          banExpiresAt: null,
+        });
+      } else {
+        req.logout(() => {});
+        return res.status(403).json({
+          message: "Your account is suspended.",
+          accountSuspended: true,
+          banReason: dbUser.banReason || "No reason provided.",
+          banExpiresAt: dbUser.banExpiresAt,
+        });
+      }
+    }
+
+    if (!["STAFF", "OWNER"].includes(dbUser.globalRole || "")) {
       return res.status(403).json({ message: "Staff or Owner access required" });
     }
     req.dbUser = dbUser;

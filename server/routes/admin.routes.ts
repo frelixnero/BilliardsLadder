@@ -11,6 +11,12 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/organization/seats", requireOwner, adminController.getOrganizationSeats);
   app.post("/api/admin/organization/seats", requireOwner, adminController.updateOrganizationSeats);
   app.get("/api/admin/subscription-details", requireOwner, adminController.getSubscriptionDetails);
+
+  app.post("/api/admin/users/:id/ban", requireStaffOrOwner, adminController.banUser);
+  app.post("/api/admin/users/:id/suspend", requireStaffOrOwner, adminController.suspendUser);
+  app.post("/api/admin/users/:id/unban", requireStaffOrOwner, adminController.unbanUser);
+  app.get("/api/admin/bans", requireStaffOrOwner, adminController.getBannedUsers);
+  app.get("/api/admin/users", requireStaffOrOwner, adminController.getAllUsersAdmin);
 }
 
 export function registerOperatorRoutes(app: Express) {

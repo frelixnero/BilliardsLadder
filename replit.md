@@ -55,6 +55,25 @@ The system is built on a modern web stack designed for performance, scalability,
 - All billing endpoints require authentication
 - Webhook endpoint: `POST /api/stripe/webhook` with signature verification
 
+### Ban/Suspension System
+- Admin endpoints: `POST /api/admin/users/:id/ban`, `/suspend`, `/unban`, `GET /api/admin/bans`, `GET /api/admin/users`
+- `accountStatus` field on users: "active", "suspended", "banned", "pending"
+- Ban fields: `banReason`, `bannedAt`, `bannedBy`, `banExpiresAt`
+- Middleware order: isAuthenticated → ban/suspend check → role check (no info leakage)
+- Banned users blocked at login with clear message and reason
+- Suspended users auto-reactivate when `banExpiresAt` passes
+- Owner accounts cannot be banned
+- Email notifications sent on ban/suspend/unban (via SendGrid)
+- Admin dashboard "Users & Bans" tab with search, ban dialog, and banned users list
+
+### Email Verification
+- Uses SendGrid API (`@sendgrid/mail`) with `SENDGRID_API_KEY` secret
+- From address: `osiraogene@gmail.com` (verified Single Sender in SendGrid)
+- Signup sets `emailVerified=false`, sends verification email with 24hr token
+- Login blocks unverified users with resend option
+- OAuth users automatically marked as verified
+- Owner/Staff bypass verification
+
 ## Recent Changes (Session Notes)
 
 ### Ladder Page Standardization

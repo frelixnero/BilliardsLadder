@@ -43,7 +43,11 @@ export const users = pgTable("users", {
   // Profile and status
   profileComplete: boolean("profile_complete").default(false),
   onboardingComplete: boolean("onboarding_complete").default(false),
-  accountStatus: text("account_status").default("active"), // "active", "suspended", "pending"
+  accountStatus: text("account_status").default("active"), // "active", "suspended", "banned", "pending"
+  banReason: text("ban_reason"),
+  bannedAt: timestamp("banned_at"),
+  bannedBy: text("banned_by"),
+  banExpiresAt: timestamp("ban_expires_at"),
   
   // Payment integration
   stripeCustomerId: text("stripe_customer_id"),

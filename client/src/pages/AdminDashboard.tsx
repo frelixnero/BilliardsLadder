@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import HallBattlesAdmin from "@/components/hall-battles-admin";
-import { Users, DollarSign, Shield, TrendingUp, Trophy, Settings, Gift } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, DollarSign, Shield, TrendingUp, Trophy, Settings, Gift, Ban, ShieldOff, ShieldCheck } from "lucide-react";
 
 interface User {
   id: string;
@@ -202,10 +205,14 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="staff" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 bg-black/40">
+        <TabsList className="grid w-full grid-cols-8 bg-black/40">
           <TabsTrigger value="staff" className="data-[state=active]:bg-green-600">
             <Users className="w-4 h-4 mr-2" />
-            Staff Management
+            Staff
+          </TabsTrigger>
+          <TabsTrigger value="user-management" className="data-[state=active]:bg-green-600" data-testid="tab-user-management">
+            <Ban className="w-4 h-4 mr-2" />
+            Users & Bans
           </TabsTrigger>
           <TabsTrigger value="organizations" className="data-[state=active]:bg-green-600">
             <Shield className="w-4 h-4 mr-2" />
@@ -217,7 +224,7 @@ export default function AdminDashboard() {
           </TabsTrigger>
           <TabsTrigger value="payouts" className="data-[state=active]:bg-green-600">
             <DollarSign className="w-4 h-4 mr-2" />
-            Payout History
+            Payouts
           </TabsTrigger>
           <TabsTrigger value="overview" className="data-[state=active]:bg-green-600">
             <TrendingUp className="w-4 h-4 mr-2" />
@@ -355,6 +362,10 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="user-management" className="space-y-6">
+          <UserManagementPanel />
         </TabsContent>
 
         <TabsContent value="organizations" className="space-y-6">
@@ -817,5 +828,372 @@ function OrganizationCard({ organization, onUpdate }: { organization: any; onUpd
         <p className="text-gray-400 text-sm">No active subscription</p>
       )}
     </div>
+  );
+}
+
+interface AdminUser {
+  id: string;
+  email: string;
+  name?: string;
+  globalRole: string;
+  accountStatus: string;
+  banReason?: string;
+  bannedAt?: string;
+  banExpiresAt?: string;
+  createdAt?: string;
+}
+
+function UserManagementPanel() {
+  const [activeSubTab, setActiveSubTab] = useState<"all" | "banned">("all");
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [banType, setBanType] = useState<"ban" | "suspend">("ban");
+  const [banReason, setBanReason] = useState("");
+  const [banExpiresAt, setBanExpiresAt] = useState("");
+  const [targetUser, setTargetUser] = useState<AdminUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: allUsers, isLoading: loadingUsers } = useQuery<AdminUser[]>({
+    queryKey: ["/api/admin/users"],
+  });
+
+  const { data: bannedUsers, isLoading: loadingBanned } = useQuery<AdminUser[]>({
+    queryKey: ["/api/admin/bans"],
+  });
+
+  const banMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      return apiRequest("/api/admin/users/" + userId + "/ban", {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "User Banned", description: "The user has been banned and notified." });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bans"] });
+      closeBanDialog();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed", description: error.message || "Failed to ban user", variant: "destructive" });
+    },
+  });
+
+  const suspendMutation = useMutation({
+    mutationFn: async ({ userId, reason, expiresAt }: { userId: string; reason: string; expiresAt: string }) => {
+      return apiRequest("/api/admin/users/" + userId + "/suspend", {
+        method: "POST",
+        body: JSON.stringify({ reason, expiresAt }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "User Suspended", description: "The user has been suspended and notified." });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bans"] });
+      closeBanDialog();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed", description: error.message || "Failed to suspend user", variant: "destructive" });
+    },
+  });
+
+  const unbanMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("/api/admin/users/" + userId + "/unban", {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "User Reinstated", description: "The user's account has been reactivated." });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bans"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed", description: error.message || "Failed to reinstate user", variant: "destructive" });
+    },
+  });
+
+  function openBanDialog(user: AdminUser, type: "ban" | "suspend") {
+    setTargetUser(user);
+    setBanType(type);
+    setBanReason("");
+    setBanExpiresAt("");
+    setBanDialogOpen(true);
+  }
+
+  function closeBanDialog() {
+    setBanDialogOpen(false);
+    setTargetUser(null);
+    setBanReason("");
+    setBanExpiresAt("");
+  }
+
+  function handleBanSubmit() {
+    if (!targetUser || !banReason.trim()) return;
+    if (banType === "ban") {
+      banMutation.mutate({ userId: targetUser.id, reason: banReason });
+    } else {
+      if (!banExpiresAt) return;
+      suspendMutation.mutate({ userId: targetUser.id, reason: banReason, expiresAt: banExpiresAt });
+    }
+  }
+
+  const filteredUsers = (allUsers || []).filter((u) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      u.email.toLowerCase().includes(q) ||
+      (u.name || "").toLowerCase().includes(q) ||
+      u.globalRole.toLowerCase().includes(q)
+    );
+  });
+
+  const statusBadge = (status: string) => {
+    if (status === "banned") return <Badge className="bg-red-900/60 text-red-300 border-red-500/30">Banned</Badge>;
+    if (status === "suspended") return <Badge className="bg-yellow-900/60 text-yellow-300 border-yellow-500/30">Suspended</Badge>;
+    return <Badge className="bg-green-900/60 text-green-300 border-green-500/30">Active</Badge>;
+  };
+
+  const roleBadge = (role: string) => {
+    const colors: Record<string, string> = {
+      OWNER: "bg-purple-900/60 text-purple-300 border-purple-500/30",
+      STAFF: "bg-blue-900/60 text-blue-300 border-blue-500/30",
+      OPERATOR: "bg-cyan-900/60 text-cyan-300 border-cyan-500/30",
+      PLAYER: "bg-gray-800/60 text-gray-300 border-gray-500/30",
+    };
+    return <Badge className={colors[role] || colors.PLAYER}>{role}</Badge>;
+  };
+
+  return (
+    <>
+      <Card className="bg-black/60 border-green-600/30">
+        <CardHeader>
+          <CardTitle className="text-green-400 flex items-center gap-2">
+            <Ban className="w-5 h-5" />
+            User Management & Bans
+          </CardTitle>
+          <CardDescription className="text-gray-300">
+            View all users, ban or suspend accounts, and manage banned users.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4 items-center">
+            <div className="flex gap-2">
+              <Button
+                variant={activeSubTab === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveSubTab("all")}
+                className={activeSubTab === "all" ? "bg-green-600 hover:bg-green-700 text-black" : "border-gray-600 text-gray-300"}
+                data-testid="button-tab-all-users"
+              >
+                All Users ({allUsers?.length || 0})
+              </Button>
+              <Button
+                variant={activeSubTab === "banned" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveSubTab("banned")}
+                className={activeSubTab === "banned" ? "bg-red-600 hover:bg-red-700 text-white" : "border-gray-600 text-gray-300"}
+                data-testid="button-tab-banned-users"
+              >
+                Banned / Suspended ({bannedUsers?.length || 0})
+              </Button>
+            </div>
+            {activeSubTab === "all" && (
+              <Input
+                placeholder="Search by name, email, or role..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-sm bg-black/40 border-gray-600 text-white"
+                data-testid="input-user-search"
+              />
+            )}
+          </div>
+
+          {activeSubTab === "all" && (
+            <div className="space-y-2">
+              {loadingUsers ? (
+                <p className="text-gray-400">Loading users...</p>
+              ) : filteredUsers.length === 0 ? (
+                <p className="text-gray-400">No users found.</p>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-gray-700/50" data-testid={`row-user-${user.id}`}>
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-white font-medium">{user.name || "Unnamed"}</p>
+                        <p className="text-gray-400 text-sm">{user.email}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {roleBadge(user.globalRole)}
+                        {statusBadge(user.accountStatus || "active")}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {user.globalRole !== "OWNER" && (user.accountStatus === "active" || !user.accountStatus) && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+                            onClick={() => openBanDialog(user, "suspend")}
+                            data-testid={`button-suspend-${user.id}`}
+                          >
+                            <ShieldOff className="w-3 h-3 mr-1" />
+                            Suspend
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                            onClick={() => openBanDialog(user, "ban")}
+                            data-testid={`button-ban-${user.id}`}
+                          >
+                            <Ban className="w-3 h-3 mr-1" />
+                            Ban
+                          </Button>
+                        </>
+                      )}
+                      {(user.accountStatus === "banned" || user.accountStatus === "suspended") && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                          onClick={() => unbanMutation.mutate(user.id)}
+                          disabled={unbanMutation.isPending}
+                          data-testid={`button-unban-${user.id}`}
+                        >
+                          <ShieldCheck className="w-3 h-3 mr-1" />
+                          Reinstate
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeSubTab === "banned" && (
+            <div className="space-y-2">
+              {loadingBanned ? (
+                <p className="text-gray-400">Loading banned users...</p>
+              ) : (bannedUsers || []).length === 0 ? (
+                <p className="text-gray-400">No banned or suspended users.</p>
+              ) : (
+                (bannedUsers || []).map((user) => (
+                  <div key={user.id} className="p-4 bg-black/30 rounded-lg border border-red-500/20" data-testid={`row-banned-${user.id}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <p className="text-white font-medium">{user.name || "Unnamed"}</p>
+                          <p className="text-gray-400 text-sm">{user.email}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {roleBadge(user.globalRole)}
+                          {statusBadge(user.accountStatus)}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                        onClick={() => unbanMutation.mutate(user.id)}
+                        disabled={unbanMutation.isPending}
+                        data-testid={`button-unban-banned-${user.id}`}
+                      >
+                        <ShieldCheck className="w-3 h-3 mr-1" />
+                        Reinstate
+                      </Button>
+                    </div>
+                    <div className="text-sm space-y-1">
+                      <p className="text-red-300"><span className="text-gray-400">Reason:</span> {user.banReason}</p>
+                      {user.bannedAt && (
+                        <p className="text-gray-400">Banned on: {new Date(user.bannedAt).toLocaleDateString()}</p>
+                      )}
+                      {user.banExpiresAt && (
+                        <p className="text-yellow-400">Expires: {new Date(user.banExpiresAt).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className={banType === "ban" ? "text-red-400" : "text-yellow-400"}>
+              {banType === "ban" ? "Ban User" : "Suspend User"}
+            </DialogTitle>
+          </DialogHeader>
+          {targetUser && (
+            <div className="space-y-4">
+              <div className="p-3 bg-black/40 rounded-lg border border-gray-700">
+                <p className="text-white font-medium">{targetUser.name || "Unnamed"}</p>
+                <p className="text-gray-400 text-sm">{targetUser.email}</p>
+                <div className="mt-1">{roleBadge(targetUser.globalRole)}</div>
+              </div>
+
+              {banType === "suspend" && (
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Suspension Type</Label>
+                  <Select value={banType} onValueChange={(v) => setBanType(v as "ban" | "suspend")}>
+                    <SelectTrigger className="bg-black/40 border-gray-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="suspend">Temporary Suspension</SelectItem>
+                      <SelectItem value="ban">Permanent Ban</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-gray-300">Reason *</Label>
+                <Textarea
+                  placeholder="Explain why this user is being banned or suspended..."
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  className="bg-black/40 border-gray-600 text-white min-h-[100px]"
+                  data-testid="input-ban-reason"
+                />
+              </div>
+
+              {banType === "suspend" && (
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Suspension Expires *</Label>
+                  <Input
+                    type="date"
+                    value={banExpiresAt}
+                    onChange={(e) => setBanExpiresAt(e.target.value)}
+                    className="bg-black/40 border-gray-600 text-white"
+                    min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                    data-testid="input-ban-expiry"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={closeBanDialog} className="border-gray-600 text-gray-300">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBanSubmit}
+              disabled={!banReason.trim() || (banType === "suspend" && !banExpiresAt) || banMutation.isPending || suspendMutation.isPending}
+              className={banType === "ban" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-yellow-600 hover:bg-yellow-700 text-black"}
+              data-testid="button-confirm-ban"
+            >
+              {banMutation.isPending || suspendMutation.isPending ? "Processing..." : banType === "ban" ? "Ban User" : "Suspend User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

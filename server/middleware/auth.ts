@@ -40,16 +40,46 @@ export const requireRole = (allowedRoles: GlobalRole[]): RequestHandler => {
       const user = req.user as any;
       let dbUser;
 
-      // Check if user came from OIDC or password auth
       if (user.claims?.sub) {
-        // OIDC user
         dbUser = await storage.getUser(user.claims.sub);
       } else if (user.id) {
-        // Password auth user
         dbUser = await storage.getUser(user.id);
       }
 
-      if (!dbUser || !allowedRoles.includes(dbUser.globalRole as GlobalRole)) {
+      if (!dbUser) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      if (dbUser.accountStatus === "banned") {
+        req.logout(() => {});
+        return res.status(403).json({
+          message: "Your account has been banned.",
+          accountBanned: true,
+          banReason: dbUser.banReason || "No reason provided.",
+        });
+      }
+
+      if (dbUser.accountStatus === "suspended") {
+        if (dbUser.banExpiresAt && new Date(dbUser.banExpiresAt) < new Date()) {
+          await storage.updateUser(dbUser.id, {
+            accountStatus: "active",
+            banReason: null,
+            bannedAt: null,
+            bannedBy: null,
+            banExpiresAt: null,
+          });
+        } else {
+          req.logout(() => {});
+          return res.status(403).json({
+            message: "Your account is suspended.",
+            accountSuspended: true,
+            banReason: dbUser.banReason || "No reason provided.",
+            banExpiresAt: dbUser.banExpiresAt,
+          });
+        }
+      }
+
+      if (!allowedRoles.includes(dbUser.globalRole as GlobalRole)) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
@@ -65,6 +95,54 @@ export const requireOwner = requireRole(["OWNER"]);
 export const requireStaffOrOwner = requireRole(["STAFF", "OWNER"]);
 export const requireOperator = requireRole(["OPERATOR"]);
 export const requireAnyAuth = requireRole(["OWNER", "STAFF", "OPERATOR", "PLAYER"]);
+
+// Account status check middleware — runs AFTER isAuthenticated
+export const checkAccountStatus: RequestHandler = async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    if (!user) return next();
+
+    const userId = user.claims?.sub || user.id;
+    if (!userId) return next();
+
+    const dbUser = await storage.getUser(userId);
+    if (!dbUser) return next();
+
+    if (dbUser.accountStatus === "banned") {
+      req.logout(() => {});
+      return res.status(403).json({
+        message: "Your account has been banned.",
+        accountBanned: true,
+        banReason: dbUser.banReason || "No reason provided.",
+      });
+    }
+
+    if (dbUser.accountStatus === "suspended") {
+      if (dbUser.banExpiresAt && new Date(dbUser.banExpiresAt) < new Date()) {
+        await storage.updateUser(dbUser.id, {
+          accountStatus: "active",
+          banReason: null,
+          bannedAt: null,
+          bannedBy: null,
+          banExpiresAt: null,
+        });
+        return next();
+      }
+
+      req.logout(() => {});
+      return res.status(403).json({
+        message: "Your account is suspended.",
+        accountSuspended: true,
+        banReason: dbUser.banReason || "No reason provided.",
+        banExpiresAt: dbUser.banExpiresAt,
+      });
+    }
+
+    return next();
+  } catch (error) {
+    return next();
+  }
+};
 
 // Account lockout utilities
 const MAX_LOGIN_ATTEMPTS = 5;

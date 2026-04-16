@@ -509,6 +509,266 @@ export async function getOrganizationSeats(req: Request, res: Response) {
   }
 }
 
+// Ban a user (permanent)
+export async function banUser(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const adminUser = (req as any).dbUser;
+
+    if (!reason) {
+      return res.status(400).json({ error: "A ban reason is required" });
+    }
+
+    const targetUser = await storage.getUser(id);
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (targetUser.globalRole === "OWNER") {
+      return res.status(403).json({ error: "Cannot ban an owner account" });
+    }
+
+    if (targetUser.accountStatus === "banned") {
+      return res.status(400).json({ error: "User is already banned" });
+    }
+
+    await storage.updateUser(id, {
+      accountStatus: "banned",
+      banReason: reason,
+      bannedAt: new Date(),
+      bannedBy: adminUser.id,
+      banExpiresAt: null,
+    });
+
+    try {
+      const { emailService } = await import("../services/email-service");
+      await emailService.sendEmail({
+        to: targetUser.email,
+        subject: "BilliardsLadder - Account Banned",
+        html: generateBanEmailHtml(targetUser.name || targetUser.email, reason, null),
+      });
+    } catch (emailErr) {
+      console.error("[BanSystem] Failed to send ban notification email:", emailErr);
+    }
+
+    return res.json({ message: "User has been banned", userId: id });
+  } catch (error: any) {
+    console.error("Ban user error:", error);
+    return res.status(500).json({ error: "Failed to ban user" });
+  }
+}
+
+// Suspend a user (temporary)
+export async function suspendUser(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { reason, expiresAt } = req.body;
+    const adminUser = (req as any).dbUser;
+
+    if (!reason) {
+      return res.status(400).json({ error: "A suspension reason is required" });
+    }
+
+    if (!expiresAt) {
+      return res.status(400).json({ error: "An expiry date is required for suspensions" });
+    }
+
+    const expiryDate = new Date(expiresAt);
+    if (expiryDate <= new Date()) {
+      return res.status(400).json({ error: "Expiry date must be in the future" });
+    }
+
+    const targetUser = await storage.getUser(id);
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (targetUser.globalRole === "OWNER") {
+      return res.status(403).json({ error: "Cannot suspend an owner account" });
+    }
+
+    await storage.updateUser(id, {
+      accountStatus: "suspended",
+      banReason: reason,
+      bannedAt: new Date(),
+      bannedBy: adminUser.id,
+      banExpiresAt: expiryDate,
+    });
+
+    try {
+      const { emailService } = await import("../services/email-service");
+      await emailService.sendEmail({
+        to: targetUser.email,
+        subject: "BilliardsLadder - Account Suspended",
+        html: generateBanEmailHtml(targetUser.name || targetUser.email, reason, expiryDate),
+      });
+    } catch (emailErr) {
+      console.error("[BanSystem] Failed to send suspension notification email:", emailErr);
+    }
+
+    return res.json({ message: "User has been suspended", userId: id, expiresAt: expiryDate });
+  } catch (error: any) {
+    console.error("Suspend user error:", error);
+    return res.status(500).json({ error: "Failed to suspend user" });
+  }
+}
+
+// Unban/unsuspend a user
+export async function unbanUser(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    const targetUser = await storage.getUser(id);
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (targetUser.accountStatus !== "banned" && targetUser.accountStatus !== "suspended") {
+      return res.status(400).json({ error: "User is not banned or suspended" });
+    }
+
+    await storage.updateUser(id, {
+      accountStatus: "active",
+      banReason: null,
+      bannedAt: null,
+      bannedBy: null,
+      banExpiresAt: null,
+    });
+
+    try {
+      const { emailService } = await import("../services/email-service");
+      await emailService.sendEmail({
+        to: targetUser.email,
+        subject: "BilliardsLadder - Account Reinstated",
+        html: generateUnbanEmailHtml(targetUser.name || targetUser.email),
+      });
+    } catch (emailErr) {
+      console.error("[BanSystem] Failed to send unban notification email:", emailErr);
+    }
+
+    return res.json({ message: "User has been reinstated", userId: id });
+  } catch (error: any) {
+    console.error("Unban user error:", error);
+    return res.status(500).json({ error: "Failed to reinstate user" });
+  }
+}
+
+// Get all banned/suspended users
+export async function getBannedUsers(req: Request, res: Response) {
+  try {
+    const allUsers = await storage.getAllUsers();
+    const bannedUsers = allUsers.filter(
+      (u: any) => u.accountStatus === "banned" || u.accountStatus === "suspended"
+    ).map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      globalRole: u.globalRole,
+      accountStatus: u.accountStatus,
+      banReason: u.banReason,
+      bannedAt: u.bannedAt,
+      bannedBy: u.bannedBy,
+      banExpiresAt: u.banExpiresAt,
+    }));
+
+    return res.json(bannedUsers);
+  } catch (error: any) {
+    console.error("Get banned users error:", error);
+    return res.status(500).json({ error: "Failed to fetch banned users" });
+  }
+}
+
+// Get all users for admin management
+export async function getAllUsersAdmin(req: Request, res: Response) {
+  try {
+    const allUsers = await storage.getAllUsers();
+    const users = allUsers.map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      globalRole: u.globalRole,
+      accountStatus: u.accountStatus,
+      banReason: u.banReason,
+      bannedAt: u.bannedAt,
+      banExpiresAt: u.banExpiresAt,
+      createdAt: u.createdAt,
+    }));
+
+    return res.json(users);
+  } catch (error: any) {
+    console.error("Get all users error:", error);
+    return res.status(500).json({ error: "Failed to fetch users" });
+  }
+}
+
+function generateBanEmailHtml(userName: string, reason: string, expiresAt: Date | null): string {
+  const isSuspension = expiresAt !== null;
+  const title = isSuspension ? "Account Suspended" : "Account Banned";
+  const expiryText = expiresAt
+    ? `<p style="color:#cccccc;font-size:16px;">Your suspension will be lifted on <strong style="color:#f59e0b;">${expiresAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</strong>.</p>`
+    : `<p style="color:#cccccc;font-size:16px;">This ban is permanent. If you believe this was a mistake, please contact support.</p>`;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin:0;padding:0;background-color:#000000;color:#ffffff;font-family:'Courier New',monospace;line-height:1.6;">
+      <div style="max-width:600px;margin:0 auto;padding:20px;background-color:#111111;">
+        <div style="text-align:center;padding:30px 0;border-bottom:2px solid #ef4444;margin-bottom:30px;">
+          <div style="font-size:32px;font-weight:bold;color:#ef4444;margin-bottom:10px;">BILLIARDS LADDER</div>
+          <div style="color:#888888;font-size:14px;font-style:italic;">In here, respect is earned in racks, not words</div>
+        </div>
+        <div style="padding:20px 0;">
+          <h2 style="color:#ef4444;margin-bottom:20px;">${title}</h2>
+          <p style="color:#cccccc;font-size:16px;">Hello ${userName},</p>
+          <p style="color:#cccccc;font-size:16px;">Your BilliardsLadder account has been ${isSuspension ? "suspended" : "banned"}.</p>
+          <div style="background:#1a0000;border:1px solid #ef4444;border-radius:6px;padding:16px;margin:20px 0;">
+            <p style="color:#ef4444;font-weight:bold;margin:0 0 8px 0;">Reason:</p>
+            <p style="color:#cccccc;margin:0;">${reason}</p>
+          </div>
+          ${expiryText}
+        </div>
+        <div style="background:#0a0a0a;color:#555555;padding:20px;text-align:center;font-size:12px;border-top:1px solid #222222;">
+          <p style="margin:0;">BilliardsLadder &mdash; Pool &bull; Points &bull; Pride</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function generateUnbanEmailHtml(userName: string): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin:0;padding:0;background-color:#000000;color:#ffffff;font-family:'Courier New',monospace;line-height:1.6;">
+      <div style="max-width:600px;margin:0 auto;padding:20px;background-color:#111111;">
+        <div style="text-align:center;padding:30px 0;border-bottom:2px solid #00ff00;margin-bottom:30px;">
+          <div style="font-size:32px;font-weight:bold;color:#00ff00;margin-bottom:10px;">BILLIARDS LADDER</div>
+          <div style="color:#888888;font-size:14px;font-style:italic;">In here, respect is earned in racks, not words</div>
+        </div>
+        <div style="padding:20px 0;">
+          <h2 style="color:#00ff00;margin-bottom:20px;">Account Reinstated</h2>
+          <p style="color:#cccccc;font-size:16px;">Hello ${userName},</p>
+          <p style="color:#cccccc;font-size:16px;">Your BilliardsLadder account has been reinstated. You can now log in and access all features.</p>
+          <div style="text-align:center;margin:30px 0;">
+            <a href="${process.env.APP_BASE_URL || 'http://localhost:5000'}/login"
+               style="background:#059669;color:white;padding:14px 40px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;font-size:16px;letter-spacing:1px;">
+              LOG IN NOW
+            </a>
+          </div>
+        </div>
+        <div style="background:#0a0a0a;color:#555555;padding:20px;text-align:center;font-size:12px;border-top:1px solid #222222;">
+          <p style="margin:0;">BilliardsLadder &mdash; Pool &bull; Points &bull; Pride</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 // Aliases for route naming consistency
 export const getPayoutHistory = getPayouts;
 export const getConnectAccountStatus = getConnectStatus;
