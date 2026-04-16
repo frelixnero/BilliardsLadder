@@ -56,6 +56,77 @@ const prices = {
   }
 };
 
+type OperatorTier = "small" | "medium" | "large" | "mega";
+
+const OPERATOR_TIER_ORDER: OperatorTier[] = ["small", "medium", "large", "mega"];
+const OPERATOR_SUBSCRIPTION_MIN_PLAYERS = 20;
+
+function normalizeOperatorTier(value: unknown): OperatorTier | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  return OPERATOR_TIER_ORDER.includes(normalized as OperatorTier)
+    ? (normalized as OperatorTier)
+    : null;
+}
+
+function getOperatorTierForPlayerCount(playerCount: number): OperatorTier {
+  if (playerCount <= 15) return "small";
+  if (playerCount <= 25) return "medium";
+  if (playerCount <= 40) return "large";
+  return "mega";
+}
+
+function getOperatorTierForPriceId(priceId: string): OperatorTier | null {
+  const priceToTier: Record<string, OperatorTier> = {
+    [prices.small]: "small",
+    [prices.medium]: "medium",
+    [prices.large]: "large",
+    [prices.mega]: "mega",
+  };
+
+  return priceToTier[priceId] || null;
+}
+
+function getAllowedOperatorTiers(playerCount: number): OperatorTier[] {
+  const minimumTier = getOperatorTierForPlayerCount(playerCount);
+  const minTierIndex = OPERATOR_TIER_ORDER.indexOf(minimumTier);
+  return OPERATOR_TIER_ORDER.slice(minTierIndex);
+}
+
+type OperatorSubscriptionEligibility = {
+  activePlayerCount: number;
+  rosterPlayerCount: number;
+  subscriptionPlayerCount: number;
+  minPlayers: number;
+  meetsMinimumPlayers: boolean;
+  minimumAllowedTier: OperatorTier | null;
+  allowedTiers: OperatorTier[];
+};
+
+async function getOperatorSubscriptionEligibilityForUser(
+  storage: IStorage,
+  userId: string,
+): Promise<OperatorSubscriptionEligibility> {
+  const hallId = userId;
+  const roster = await storage.getRosterByHall(hallId);
+  const rosterPlayerCount = roster.length;
+  const existingOperatorSubscription = await storage.getOperatorSubscription(userId);
+  const subscriptionPlayerCount = existingOperatorSubscription?.playerCount || 0;
+  const activePlayerCount = Math.max(rosterPlayerCount, subscriptionPlayerCount);
+  const meetsMinimumPlayers = activePlayerCount >= OPERATOR_SUBSCRIPTION_MIN_PLAYERS;
+  const allowedTiers = meetsMinimumPlayers ? getAllowedOperatorTiers(activePlayerCount) : [];
+
+  return {
+    activePlayerCount,
+    rosterPlayerCount,
+    subscriptionPlayerCount,
+    minPlayers: OPERATOR_SUBSCRIPTION_MIN_PLAYERS,
+    meetsMinimumPlayers,
+    minimumAllowedTier: allowedTiers[0] || null,
+    allowedTiers,
+  };
+}
+
 // ==================== PRICING CONTROLLERS ====================
 
 export function getPricingTiers() {
@@ -115,10 +186,66 @@ export function calculateMembershipSavings() {
 
 // ==================== BILLING CONTROLLERS ====================
 
-export function createCheckoutSession() {
+export function createCheckoutSession(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
       const { priceIds = [], mode = 'subscription', quantities = [], metadata = {}, userId, customerId } = req.body;
+
+      const dbUser = (req as any).dbUser;
+      const requestedProductType = metadata.productType || metadata.product_type;
+      const requestedMetadataTier = normalizeOperatorTier(metadata.tier);
+      const requestedPriceTier = typeof priceIds[0] === "string" ? getOperatorTierForPriceId(priceIds[0]) : null;
+      const isOperatorSubscriptionCheckout =
+        requestedProductType === "operator_subscription" ||
+        !!requestedMetadataTier ||
+        !!requestedPriceTier;
+
+      if (isOperatorSubscriptionCheckout) {
+        if (!dbUser?.id) {
+          return res.status(401).json({ message: "Authentication required for operator subscriptions" });
+        }
+
+        if (dbUser.globalRole && !["OPERATOR", "OWNER"].includes(dbUser.globalRole)) {
+          return res.status(403).json({ message: "Only operators can create hall subscriptions" });
+        }
+
+        const effectiveUserId = dbUser.id;
+        const eligibility = await getOperatorSubscriptionEligibilityForUser(storage, effectiveUserId);
+        const { activePlayerCount, minPlayers, meetsMinimumPlayers, minimumAllowedTier, allowedTiers } = eligibility;
+
+        if (!meetsMinimumPlayers) {
+          return res.status(400).json({
+            message: `A minimum of ${minPlayers} active players is required for operator subscriptions. Current active players: ${activePlayerCount}.`,
+            code: "OPERATOR_SUBSCRIPTION_MIN_PLAYERS_NOT_MET",
+            minPlayers,
+            activePlayerCount,
+          });
+        }
+
+        const selectedTier = requestedMetadataTier || requestedPriceTier;
+        if (!selectedTier) {
+          return res.status(400).json({
+            message: "Operator subscription tier is required.",
+            code: "OPERATOR_SUBSCRIPTION_TIER_REQUIRED",
+          });
+        }
+
+        if (!allowedTiers.includes(selectedTier)) {
+          return res.status(400).json({
+            message: `Your hall has ${activePlayerCount} active players. Minimum eligible tier is ${minimumAllowedTier}.`,
+            code: "OPERATOR_SUBSCRIPTION_TIER_NOT_ELIGIBLE",
+            activePlayerCount,
+            minimumAllowedTier,
+            allowedTiers,
+            selectedTier,
+          });
+        }
+
+        metadata.tier = selectedTier;
+        metadata.operatorId = effectiveUserId;
+        metadata.hallId = effectiveUserId;
+        metadata.activePlayerCount = String(activePlayerCount);
+      }
 
       const baseUrl = getAppBaseUrl();
 
@@ -146,7 +273,6 @@ export function createCheckoutSession() {
 
       let resolvedCustomerId = customerId;
       if (!resolvedCustomerId && stripe) {
-        const dbUser = (req as any).dbUser;
         if (dbUser?.stripeCustomerId) {
           resolvedCustomerId = dbUser.stripeCustomerId;
         } else if (dbUser) {
@@ -168,6 +294,26 @@ export function createCheckoutSession() {
       res.json({ url: session.url });
     } catch (error: any) {
       res.status(500).json({ message: "Error creating checkout session: " + error.message });
+    }
+  };
+}
+
+export function getOperatorSubscriptionEligibility(storage: IStorage) {
+  return async (req: Request, res: Response) => {
+    try {
+      const dbUser = (req as any).dbUser;
+      if (!dbUser?.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      if (dbUser.globalRole && !["OPERATOR", "OWNER"].includes(dbUser.globalRole)) {
+        return res.status(403).json({ message: "Only operators can view operator subscription eligibility" });
+      }
+
+      const eligibility = await getOperatorSubscriptionEligibilityForUser(storage, dbUser.id);
+      return res.json(eligibility);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
     }
   };
 }

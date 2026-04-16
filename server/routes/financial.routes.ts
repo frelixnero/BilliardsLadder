@@ -22,7 +22,7 @@ export function setupFinancialRoutes(app: Express, storage: IStorage) {
   app.post("/api/billing/checkout",
     requireAnyAuth,
     sanitizeBody(["description", "name", "title"]),
-    financialController.createCheckoutSession()
+    financialController.createCheckoutSession(storage)
   );
 
   app.post("/api/billing/portal",
@@ -73,6 +73,11 @@ export function setupFinancialRoutes(app: Express, storage: IStorage) {
   app.get("/api/operator-subscriptions",
     requireAnyAuth,
     financialController.getOperatorSubscriptions(storage)
+  );
+
+  app.get("/api/operator-subscriptions/eligibility",
+    requireAnyAuth,
+    financialController.getOperatorSubscriptionEligibility(storage)
   );
 
   app.get("/api/operator-subscriptions/:operatorId",

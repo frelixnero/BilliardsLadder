@@ -152,6 +152,18 @@ const ADDON_ITEMS = [
   { label: "Extra Player Bundle (10 pack)", price: "$50/mo", description: "Bulk discount — add 10 extra players at a reduced rate" },
 ];
 
+type OperatorTier = "small" | "medium" | "large" | "mega";
+
+interface OperatorSubscriptionEligibility {
+  activePlayerCount: number;
+  rosterPlayerCount: number;
+  subscriptionPlayerCount: number;
+  minPlayers: number;
+  meetsMinimumPlayers: boolean;
+  minimumAllowedTier: OperatorTier | null;
+  allowedTiers: OperatorTier[];
+}
+
 export default function OperatorSubscriptions() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -175,6 +187,15 @@ export default function OperatorSubscriptions() {
       }
     },
     enabled: !!user,
+  });
+
+  const { data: eligibility } = useQuery<OperatorSubscriptionEligibility>({
+    queryKey: ["/api/operator-subscriptions/eligibility", user?.id],
+    queryFn: async () => {
+      return await apiRequest("/api/operator-subscriptions/eligibility");
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
   });
 
   const checkoutMutation = useMutation({
@@ -218,6 +239,10 @@ export default function OperatorSubscriptions() {
 
   const currentTierKey = currentSubscription?.tier || null;
   const hasActive = currentSubscription?.hasSubscription && currentSubscription?.status === "active";
+  const activePlayerCount = eligibility?.activePlayerCount ?? 0;
+  const minPlayers = eligibility?.minPlayers ?? 20;
+  const minimumTierKey = eligibility?.minimumAllowedTier ?? null;
+  const allowedTiers = eligibility?.allowedTiers ?? [];
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -229,6 +254,20 @@ export default function OperatorSubscriptions() {
           Choose the plan that fits your venue. Every tier includes full ladder management, player rankings, and the tools to run competitive billiards.
         </p>
       </div>
+
+      <Card className="mb-8 bg-gray-900/50 border-gray-700" data-testid="card-eligibility-gate">
+        <CardContent className="py-4">
+          <p className="text-sm text-gray-300">
+            Active players detected: <span className="font-semibold text-white">{activePlayerCount}</span>
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Operator subscriptions require at least {minPlayers} active players.
+            {minimumTierKey
+              ? ` With your current count, eligible tiers start at ${minimumTierKey}.`
+              : " Add more active players to unlock hall subscription checkout."}
+          </p>
+        </CardContent>
+      </Card>
 
       {hasActive && currentTierKey && (
         <Card className="mb-8 ring-2 ring-emerald-500 bg-emerald-900/10 border-emerald-700/50" data-testid="card-current-operator-plan">
@@ -263,6 +302,8 @@ export default function OperatorSubscriptions() {
         {HALL_TIERS.map((tier) => {
           const isCurrentTier = hasActive && currentTierKey === tier.key;
           const TierIcon = tier.icon;
+          const isEligible = allowedTiers.includes(tier.key as OperatorTier);
+          const isDisabled = !isCurrentTier && !isEligible;
 
           return (
             <TierCard key={tier.key} tier={tier} isCurrentTier={isCurrentTier}>
@@ -307,11 +348,15 @@ export default function OperatorSubscriptions() {
                 ) : (
                   <Button
                     onClick={() => checkoutMutation.mutate(tier.key)}
-                    disabled={checkoutMutation.isPending}
+                    disabled={checkoutMutation.isPending || isDisabled}
                     className={`w-full ${tier.btnColor} ${tier.btnHover}`}
                     data-testid={`button-choose-${tier.key}`}
                   >
-                    {checkoutMutation.isPending ? "Processing..." : `Choose ${tier.name}`}
+                    {checkoutMutation.isPending
+                      ? "Processing..."
+                      : isDisabled
+                        ? `Requires ${minimumTierKey || `${minPlayers}+`} players`
+                        : `Choose ${tier.name}`}
                   </Button>
                 )}
               </CardFooter>
