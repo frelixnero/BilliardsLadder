@@ -35,9 +35,15 @@ app.use(helmet({
 }));
 
 // CORS configuration for production
+const configuredOriginList = [
+  ...(process.env.APP_BASE_URL ? [process.env.APP_BASE_URL] : []),
+  ...(process.env.REPLIT_DOMAINS?.split(',').map((d) => `https://${d.trim().replace(/^https?:\/\//, "")}`) ?? []),
+  ...(process.env.RENDER_EXTERNAL_URL ? [process.env.RENDER_EXTERNAL_URL] : []),
+].filter(Boolean);
+
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? [process.env.REPLIT_DOMAINS?.split(',') || [], 'https://*.replit.app'].flat()
+    ? configuredOriginList
     : true, // Allow all origins in development
   credentials: true,
   optionsSuccessStatus: 200,

@@ -39,6 +39,8 @@ const membershipTiers = [
   { value: "pro", label: "Pro Membership", description: "$60/month - Includes coaching" },
 ];
 
+const OIDC_ENABLED = String(import.meta.env.VITE_ENABLE_OIDC ?? "false").toLowerCase() === "true";
+
 export default function Signup() {
   const urlParams = new URLSearchParams(window.location.search);
   const initialRole = urlParams.get("role") === "operator" ? "operator" : "player";
@@ -182,25 +184,29 @@ export default function Signup() {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Google Signup Button */}
-          <Button
-            onClick={handleGoogleSignup}
-            variant="outline"
-            className="w-full border-gray-600 hover:bg-gray-800 text-white"
-            data-testid="button-google-signup"
-          >
-            <Chrome className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
+          {OIDC_ENABLED && (
+            <>
+              {/* Google Signup Button */}
+              <Button
+                onClick={handleGoogleSignup}
+                variant="outline"
+                className="w-full border-gray-600 hover:bg-gray-800 text-white"
+                data-testid="button-google-signup"
+              >
+                <Chrome className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-600" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-black px-2 text-gray-400">Or create account</span>
-            </div>
-          </div>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-black px-2 text-gray-400">Or create account</span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Account Type Selection */}
           <div className="space-y-3">

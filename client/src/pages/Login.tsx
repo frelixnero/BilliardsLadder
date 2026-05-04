@@ -48,6 +48,8 @@ interface BanAppeal {
   updatedAt: string;
 }
 
+const OIDC_ENABLED = String(import.meta.env.VITE_ENABLE_OIDC ?? "false").toLowerCase() === "true";
+
 function BanNotificationScreen({
   banInfo,
   onBack,
@@ -481,24 +483,28 @@ export default function Login() {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Button
-            onClick={handleGoogleLogin}
-            variant="outline"
-            className="w-full border-gray-600 hover:bg-gray-800 text-white"
-            data-testid="button-google-login"
-          >
-            <Chrome className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
+          {OIDC_ENABLED && (
+            <>
+              <Button
+                onClick={handleGoogleLogin}
+                variant="outline"
+                className="w-full border-gray-600 hover:bg-gray-800 text-white"
+                data-testid="button-google-login"
+              >
+                <Chrome className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-600" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-black px-2 text-gray-400">Or continue with email</span>
-            </div>
-          </div>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-black px-2 text-gray-400">Or continue with email</span>
+                </div>
+              </div>
+            </>
+          )}
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

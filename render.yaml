@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: billiardsladder-web
+    env: node
+    plan: starter
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 10000
+      - key: AUTH_OIDC_ENABLED
+        value: false
+      - key: VITE_ENABLE_OIDC
+        value: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SMALL_PRICE_ID
+        sync: false
+      - key: MEDIUM_PRICE_ID
+        sync: false
+      - key: LARGE_PRICE_ID
+        sync: false
+      - key: MEGA_PRICE_ID
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SENDGRID_FROM_EMAIL
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: REPLIT_DOMAINS
+        sync: false
+      - key: REPL_ID
+        sync: false
+      - key: ISSUER_URL
+        value: https://replit.com/oidc

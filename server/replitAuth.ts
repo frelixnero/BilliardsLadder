@@ -16,15 +16,19 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+function isOidcEnabled(): boolean {
+  const raw = (process.env.AUTH_OIDC_ENABLED ?? "false").toLowerCase().trim();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
 }
 
 const getOidcConfig = memoize(
   async () => {
+    if (!process.env.REPL_ID) {
+      throw new Error("AUTH_OIDC_ENABLED is true but REPL_ID is missing");
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      process.env.REPL_ID
     );
   },
   { maxAge: 3600 * 1000 }
@@ -85,9 +89,28 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Import and register enhanced auth routes
-  const { registerAuthRoutes } = await import("./routes/auth.routes");
-  registerAuthRoutes(app);
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+
+  if (!isOidcEnabled()) {
+    app.get("/api/login", (_req, res) => {
+      return res.status(404).json({
+        message: "OIDC login is disabled. Use email/password login.",
+      });
+    });
+    app.get("/api/callback", (_req, res) => res.redirect("/login"));
+    app.get("/api/auth/oauth-complete", (_req, res) => res.redirect("/login"));
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => {
+        res.redirect("/");
+      });
+    });
+    return;
+  }
+
+  if (!process.env.REPLIT_DOMAINS) {
+    throw new Error("AUTH_OIDC_ENABLED is true but REPLIT_DOMAINS is missing");
+  }
 
   const config = await getOidcConfig();
 
@@ -114,9 +137,6 @@ export async function setupAuth(app: Express) {
     );
     passport.use(strategy);
   }
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
     const role = req.query.role as string;
@@ -193,6 +213,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   if (user.authType === "password") {
     return next();
+  }
+
+  if (!isOidcEnabled()) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   if (!user.expires_at) {
