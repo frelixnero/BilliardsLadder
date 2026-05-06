@@ -255,6 +255,9 @@ export function getIncidentsByUser(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
+      const { requireSelfOrStaff } = await import("../utils/ownership");
+      if (!requireSelfOrStaff(req, res, userId)) return;
+
       const incidents = await storage.getIncidentsByUser(userId);
       res.json(incidents);
     } catch (error: any) {

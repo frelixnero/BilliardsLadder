@@ -1,41 +1,29 @@
 import type { Express } from "express";
+import { isAuthenticated, requireOwner, requireStaffOrOwner } from "../replitAuth";
+import { requireAnyAuth } from "../middleware/auth";
 import * as hallController from "../controllers/hall.controller";
 
 export function registerHallRoutes(app: Express) {
-  
-  // Get all pool halls with standings (only shows unlocked halls for battles)
+
+  // Public reads — needed by landing/marketing pages
   app.get("/api/halls", hallController.getAllHalls);
-
-  // Get specific hall details
   app.get("/api/halls/:hallId", hallController.getHallDetails);
-
-  // Get all hall matches (only for unlocked halls)
   app.get("/api/hall-matches", hallController.getAllHallMatches);
-
-  // Create new hall match
-  app.post("/api/hall-matches", hallController.createHallMatch);
-
-  // Update hall match (for scoring and completion)
-  app.patch("/api/hall-matches/:matchId", hallController.updateHallMatch);
-
-  // Get hall roster
-  app.get("/api/halls/:hallId/roster", hallController.getHallRoster);
-
-  // Add player to hall roster
-  app.post("/api/halls/:hallId/roster", hallController.addPlayerToRoster);
-
-  // Remove player from hall roster
-  app.delete("/api/halls/:hallId/roster/:rosterId", hallController.removePlayerFromRoster);
-
-  // Get hall statistics and head-to-head records
   app.get("/api/halls/:hallId/stats", hallController.getHallStats);
 
-  // Admin endpoint to unlock hall battles
-  app.post("/api/admin/halls/:hallId/unlock-battles", hallController.unlockHallBattles);
+  // Roster reads require auth
+  app.get("/api/halls/:hallId/roster", isAuthenticated, hallController.getHallRoster);
 
-  // Admin endpoint to lock hall battles
-  app.post("/api/admin/halls/:hallId/lock-battles", hallController.lockHallBattles);
+  // Match writes — players record their matches
+  app.post("/api/hall-matches", requireAnyAuth, hallController.createHallMatch);
+  app.patch("/api/hall-matches/:matchId", requireAnyAuth, hallController.updateHallMatch);
 
-  // Admin endpoint to get hall battles status
-  app.get("/api/admin/halls/battles-status", hallController.getBattlesStatus);
+  // Roster management — staff/operator level
+  app.post("/api/halls/:hallId/roster", requireStaffOrOwner, hallController.addPlayerToRoster);
+  app.delete("/api/halls/:hallId/roster/:rosterId", requireStaffOrOwner, hallController.removePlayerFromRoster);
+
+  // Admin endpoints — owner only
+  app.post("/api/admin/halls/:hallId/unlock-battles", requireOwner, hallController.unlockHallBattles);
+  app.post("/api/admin/halls/:hallId/lock-battles", requireOwner, hallController.lockHallBattles);
+  app.get("/api/admin/halls/battles-status", requireStaffOrOwner, hallController.getBattlesStatus);
 }

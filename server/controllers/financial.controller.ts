@@ -446,6 +446,9 @@ export function checkRefundEligibility() {
 export function getWallet(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfOrStaff } = await import("../utils/ownership");
+      if (!requireSelfOrStaff(req, res, req.params.userId)) return;
+
       let wallet = await storage.getWallet(req.params.userId);
       if (!wallet) {
         wallet = await storage.createWallet({
@@ -464,6 +467,9 @@ export function getWallet(storage: IStorage) {
 export function getWalletLedger(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfOrStaff } = await import("../utils/ownership");
+      if (!requireSelfOrStaff(req, res, req.params.userId)) return;
+
       const entries = await storage.getLedgerByUser(req.params.userId);
       res.json(entries);
     } catch (error: any) {
@@ -475,6 +481,9 @@ export function getWalletLedger(storage: IStorage) {
 export function topUpWallet() {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfOrStaff } = await import("../utils/ownership");
+      if (!requireSelfOrStaff(req, res, req.params.userId)) return;
+
       const { amount } = req.body;
       const userId = req.params.userId;
 
@@ -504,6 +513,9 @@ export function topUpWallet() {
 export function completeTopUp(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfOrStaff } = await import("../utils/ownership");
+      if (!requireSelfOrStaff(req, res, req.params.userId)) return;
+
       const { paymentIntentId, amount } = req.body;
       const userId = req.params.userId;
 
@@ -511,6 +523,18 @@ export function completeTopUp(storage: IStorage) {
 
       if (paymentIntent.status !== 'succeeded') {
         return res.status(400).json({ message: "Payment not completed" });
+      }
+
+      // Defense in depth: ensure the PaymentIntent we're crediting was actually
+      // created for this user (metadata.userId) and matches the requested amount.
+      if (paymentIntent.metadata?.userId !== userId) {
+        return res.status(403).json({ message: "Payment does not belong to this user" });
+      }
+      if (paymentIntent.metadata?.type !== "wallet_topup") {
+        return res.status(400).json({ message: "Payment is not a wallet top-up" });
+      }
+      if (paymentIntent.amount !== Math.round(amount * 100)) {
+        return res.status(400).json({ message: "Amount mismatch" });
       }
 
       const wallet = await storage.creditWallet(userId, amount * 100);

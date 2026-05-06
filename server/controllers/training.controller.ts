@@ -123,6 +123,9 @@ export function getPlayerSessions(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
       const { playerId } = req.params;
+      const { requireSelfPlayerOrStaff } = await import("../utils/ownership");
+      if (!(await requireSelfPlayerOrStaff(req, res, playerId, storage))) return;
+
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
       const sessions = await storage.getPlayerSessions(playerId, limit);

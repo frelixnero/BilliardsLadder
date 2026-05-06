@@ -24,6 +24,9 @@ export function getAllRookieMatches(storage: IStorage) {
 export function getRookieMatchesByPlayer(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfPlayerOrStaff } = await import("../utils/ownership");
+      if (!(await requireSelfPlayerOrStaff(req, res, req.params.playerId, storage))) return;
+
       const matches = await storage.getRookieMatchesByPlayer(req.params.playerId);
       res.json(matches);
     } catch (error: any) {
@@ -161,6 +164,9 @@ export function getRookieAchievements(storage: IStorage) {
 export function getRookieSubscription(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfPlayerOrStaff } = await import("../utils/ownership");
+      if (!(await requireSelfPlayerOrStaff(req, res, req.params.playerId, storage))) return;
+
       const subscription = await storage.getRookieSubscription(req.params.playerId);
       res.json(subscription || null);
     } catch (error: any) {
@@ -173,10 +179,13 @@ export function createRookieSubscription(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
       const { playerId } = req.body;
-      
+
       if (!playerId) {
         return res.status(400).json({ message: "Player ID is required" });
       }
+
+      const { requireSelfPlayerOrStaff } = await import("../utils/ownership");
+      if (!(await requireSelfPlayerOrStaff(req, res, playerId, storage))) return;
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',

@@ -1,53 +1,66 @@
 import type { Express } from "express";
 import { IStorage } from "../storage";
+import { isAuthenticated, requireStaffOrOwner } from "../replitAuth";
+import { requireAnyAuth } from "../middleware/auth";
 import * as charityController from "../controllers/charity.controller";
 
 export function setupCharityRoutes(app: Express, storage: IStorage) {
   // ==================== CHARITY EVENT ROUTES ====================
-  app.get("/api/charity-events", 
+  // Public list — used on marketing/landing
+  app.get("/api/charity-events",
     charityController.getCharityEvents(storage)
   );
-  
-  app.post("/api/charity-events", 
+
+  app.post("/api/charity-events",
+    requireStaffOrOwner,
     charityController.createCharityEvent(storage)
   );
-  
-  app.put("/api/charity-events/:id", 
+
+  app.put("/api/charity-events/:id",
+    requireStaffOrOwner,
     charityController.updateCharityEvent(storage)
   );
-  
-  app.post("/api/charity/donate", 
+
+  // Anyone authenticated can donate
+  app.post("/api/charity/donate",
+    requireAnyAuth,
     charityController.createCharityDonation(storage)
   );
 
   // ==================== BOUNTY ROUTES ====================
-  app.get("/api/bounties", 
+  app.get("/api/bounties",
+    isAuthenticated,
     charityController.getBounties(storage)
   );
-  
-  app.post("/api/bounties", 
+
+  app.post("/api/bounties",
+    requireAnyAuth,
     charityController.createBounty(storage)
   );
-  
-  app.put("/api/bounties/:id", 
+
+  app.put("/api/bounties/:id",
+    requireStaffOrOwner,
     charityController.updateBounty(storage)
   );
 
-  // ==================== ADDED MONEY FUND ROUTES ====================
-  app.get("/api/added-money-funds", 
+  // ==================== ADDED MONEY FUND ROUTES (money — staff only for writes) ====================
+  app.get("/api/added-money-funds",
+    isAuthenticated,
     charityController.getAddedMoneyFunds(storage)
   );
-  
-  app.get("/api/added-money-funds/source/:sourceType", 
+
+  app.get("/api/added-money-funds/source/:sourceType",
+    isAuthenticated,
     charityController.getAddedMoneyFundsBySource(storage)
   );
-  
-  app.post("/api/added-money-funds", 
+
+  app.post("/api/added-money-funds",
+    requireStaffOrOwner,
     charityController.createAddedMoneyFund(storage)
   );
 
-  // ==================== JACKPOT ROUTE ====================
-  app.get("/api/jackpot", 
+  // ==================== JACKPOT ROUTE (public marketing) ====================
+  app.get("/api/jackpot",
     charityController.getJackpot(storage)
   );
 }

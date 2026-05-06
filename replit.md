@@ -85,7 +85,32 @@ The system is built on a modern web stack designed for performance, scalability,
 - OAuth users automatically marked as verified
 - Owner/Staff bypass verification
 
+## API Authentication Coverage
+After a Nov 2026 audit + lockdown pass, **221/275 routes (80%)** are now guarded; the remaining 54 are intentionally public:
+- Auth flow: login, signup, logout, password reset, email verify, ban appeal submission/status
+- Marketing reads: `/api/pricing/tiers`, `/api/operator-tiers`, `/api/league/*`, `/api/halls` (list + details + stats), `/api/hall-matches`, `/api/charity-events`, `/api/jackpot`, `/api/matches`, `/api/tournaments`, `/api/match-divisions`, `/api/live-streams*`, `/api/rookie/leaderboard`, `/api/qr-code`
+- Webhooks: `/api/stripe/webhook` and `/api/webhooks/payment-onboarding` (both signature-verified, must stay public)
+- `me.routes.ts` (does session check inside the handler, not via middleware)
+- `/public-objects/:filePath(*)` and `/api/qr-registration/:sessionId/register` (signup-via-QR)
+
+Guard helpers live in `server/middleware/auth.ts` and `server/replitAuth.ts`:
+- `isAuthenticated` — any logged-in user
+- `requireAnyAuth` — OWNER | STAFF | OPERATOR | PLAYER (also enforces ban/suspend status)
+- `requireStaffOrOwner` — STAFF | OWNER
+- `requireOwner` — OWNER only
+- `requireOperator` — OPERATOR only
+
+**Convention going forward:** every new route must have an explicit guard. Public exceptions must be commented with the reason.
+
 ## Recent Changes (Session Notes)
+
+### Quick Challenge identity fix + API auth lockdown (Nov 2026)
+- **Quick Challenge identity:** `POST /api/quick-challenge` and `GET /api/quick-challenge/suggestions` now require `isAuthenticated`. Controller derives challenger from `req.user` via `storage.getPlayerByUserId(userId)` instead of the hardcoded `'current-player-id'` placeholder. Self-challenge is blocked. Hall name resolved from storage when available. Client (`QuickChallengeDialog.tsx`) no longer sends fake `aPlayerId`/`aPlayerName`.
+- **API lockdown:** Added auth middleware to ~170 previously-open endpoints across `ai`, `financial` (refunds → staff-only, wallets/subscriptions → requireAnyAuth), `challengeCalendar` (challenge CRUD → requireAnyAuth, hall policy/fee waiver → staff), `team`, `tournament` (admin actions → staff), `pool` (resolve/hold/void side pots → staff), `hall` (roster mgmt → staff, lock/unlock → owner), `checkin` (close vote / recent incidents → staff), `file` (all CRUD requires auth), `charity` (donations → auth, fund creation → staff), `rookie`, `training` (monthly rewards → owner), `prediction`, `stream` (delete → staff), `qr` (stats → staff), `support` (list/update → staff). Marketing reads, auth flow, and webhooks intentionally remain public.
+- **IDOR fixes:** New helpers in `server/utils/ownership.ts` — `requireSelfOrStaff(req, res, paramUserId)` and `requireSelfPlayerOrStaff(req, res, paramPlayerId, storage)`. Applied at the top of every `:userId`/`:playerId` controller that returns or modifies user-specific data: wallet read/ledger/topup/topup-complete (`financial.controller.ts`), side bets by user (`pool.controller.ts`), incidents by user (`checkin.controller.ts`), training player sessions (`training.controller.ts`), rookie matches/subscription get + create (`rookie.controller.ts`). STAFF and OWNER bypass ownership for support purposes; all others get 403 if `:userId` doesn't match their session.
+- **Wallet top-up hardening:** `completeTopUp` now verifies the Stripe PaymentIntent's `metadata.userId`, `metadata.type === "wallet_topup"`, and `amount` match the request before crediting the wallet — defense-in-depth against forged top-up confirmations.
+- **Escrow challenge identity:** `createEscrowChallenge` no longer hardcodes `challengerId: "current-user"` — derives it from `req.dbUser.id` and stamps `challengerUserId` into Stripe metadata.
+
 
 ### Ladder Page Standardization
 - All three ladder pages (9ft LadderPage, 8ft EightFootLadderPage, 7ft BarboxLadderPage) now share consistent structure: Hero → Challenger Handicap → Top 3 Podium → Contenders/Elite divisions → Games → CTA

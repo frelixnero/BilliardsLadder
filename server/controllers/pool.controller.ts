@@ -594,6 +594,9 @@ export function createSideBet(storage: IStorage) {
 export function getSideBetsByUser(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
+      const { requireSelfOrStaff } = await import("../utils/ownership");
+      if (!requireSelfOrStaff(req, res, req.params.userId)) return;
+
       const bets = await storage.getSideBetsByUser(req.params.userId);
       res.json(bets);
     } catch (error: any) {
@@ -631,13 +634,19 @@ export function getEscrowChallenges(storage: IStorage) {
 export function createEscrowChallenge(storage: IStorage, stripe: Stripe) {
   return async (req: Request, res: Response) => {
     try {
+      const dbUser = (req as any).dbUser;
+      if (!dbUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const { amount, opponentId, gameType, gameFormat, terms } = req.body;
-      
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount * 100,
         currency: "usd",
         metadata: {
           type: "escrow_challenge",
+          challengerUserId: dbUser.id,
           opponentId,
           gameType,
           gameFormat,
@@ -646,7 +655,7 @@ export function createEscrowChallenge(storage: IStorage, stripe: Stripe) {
 
       const challenge = {
         id: `challenge-${Date.now()}`,
-        challengerId: "current-user",
+        challengerId: dbUser.id,
         opponentId,
         amount,
         gameType,
