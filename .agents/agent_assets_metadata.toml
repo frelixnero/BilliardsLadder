@@ -54,3 +54,9 @@ id = "GXf1AmZYXMPWtDapxfhwS"
 uri = "file://exports/BilliardsLadder-Rewards-Phase1-Starter.docx"
 type = "word_document"
 title = "Rewards & Streaks — Phase 1 Starter Plan"
+
+[[outputs]]
+id = "U2j1jBCsRfZBZokPDlEvf"
+uri = "file://exports/billiards-ladder-source.zip"
+type = "unspecified"
+title = "Billiards Ladder — Source Code"
