@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Calendar, Clock, Users, MapPin } from 'lucide-react';
+import type { Player, PoolHall } from '@shared/schema';
 import {
   Dialog,
   DialogContent,
@@ -145,22 +147,29 @@ export function ChallengeDialog({
     onClose();
   };
 
-  // Mock data for dropdowns - in a real app, these would come from API
-  const poolHalls = [
-    { id: 'hall1', name: 'Downtown Billiards' },
-    { id: 'hall2', name: 'Rack Em Up' },
-    { id: 'hall3', name: 'Corner Pocket' },
-    { id: 'hall4', name: 'Cue Club' },
-  ];
+  // Pull real players + halls from the API. `/api/players` requires auth;
+  // `/api/halls` is a public read used by marketing pages too. This dialog
+  // is only mounted from authenticated pages (ChallengeCalendar) so both
+  // resolve cleanly here.
+  const { data: players = [], isLoading: playersLoading } = useQuery<Player[]>({
+    queryKey: ['/api/players'],
+    enabled: isOpen,
+  });
 
-  const players = [
-    { id: 'player1', name: 'Mike "The Shark" Johnson' },
-    { id: 'player2', name: 'Sarah "Quick Shot" Williams' },
-    { id: 'player3', name: 'Tony "8-Ball" Rodriguez' },
-    { id: 'player4', name: 'Lisa "Pocket Queen" Chen' },
-    { id: 'player5', name: 'Jake "The Hustler" Brown' },
-    { id: 'player6', name: 'Maria "Straight Shooter" Garcia' },
-  ];
+  // /api/halls returns { halls, allHalls, battlesEnabled }. `halls` is filtered
+  // to battles-unlocked rooms; we want every active hall a match can be
+  // scheduled at, so we read from `allHalls`.
+  const { data: hallsResponse, isLoading: hallsLoading } = useQuery<{
+    halls: PoolHall[];
+    allHalls: PoolHall[];
+    battlesEnabled: boolean;
+  }>({
+    queryKey: ['/api/halls'],
+    enabled: isOpen,
+  });
+  const poolHalls = (hallsResponse?.allHalls ?? hallsResponse?.halls ?? []).filter(
+    (h) => h.active !== false,
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -242,10 +251,18 @@ export function ChallengeDialog({
                     >
                       <FormControl>
                         <SelectTrigger className="bg-gray-800 border-green-500/30 text-green-400">
-                          <SelectValue placeholder="Select Player A" />
+                          <SelectValue placeholder={playersLoading ? 'Loading players…' : 'Select Player A'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-gray-800 border-green-500/30">
+                        {!playersLoading && players.length === 0 && (
+                          <div
+                            className="px-2 py-1.5 text-sm text-green-400/60"
+                            data-testid="text-no-players"
+                          >
+                            No players available
+                          </div>
+                        )}
                         {players.map((player) => (
                           <SelectItem 
                             key={player.id} 
@@ -278,10 +295,26 @@ export function ChallengeDialog({
                     >
                       <FormControl>
                         <SelectTrigger className="bg-gray-800 border-green-500/30 text-green-400">
-                          <SelectValue placeholder="Select Player B" />
+                          <SelectValue placeholder={playersLoading ? 'Loading players…' : 'Select Player B'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-gray-800 border-green-500/30">
+                        {(() => {
+                          const eligible = players.filter(
+                            (p) => p.id !== form.watch('aPlayerId'),
+                          );
+                          if (!playersLoading && eligible.length === 0) {
+                            return (
+                              <div
+                                className="px-2 py-1.5 text-sm text-green-400/60"
+                                data-testid="text-no-opponents"
+                              >
+                                No eligible opponent
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                         {players
                           .filter(player => player.id !== form.watch('aPlayerId'))
                           .map((player) => (
@@ -319,10 +352,18 @@ export function ChallengeDialog({
                     >
                       <FormControl>
                         <SelectTrigger className="bg-gray-800 border-green-500/30 text-green-400">
-                          <SelectValue placeholder="Select Pool Hall" />
+                          <SelectValue placeholder={hallsLoading ? 'Loading halls…' : 'Select Pool Hall'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-gray-800 border-green-500/30">
+                        {!hallsLoading && poolHalls.length === 0 && (
+                          <div
+                            className="px-2 py-1.5 text-sm text-green-400/60"
+                            data-testid="text-no-halls"
+                          >
+                            No pool halls available
+                          </div>
+                        )}
                         {poolHalls.map((hall) => (
                           <SelectItem 
                             key={hall.id} 

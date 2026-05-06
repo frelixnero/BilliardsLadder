@@ -33,7 +33,7 @@ export default function PlayerDashboard() {
           Player Dashboard
         </h1>
         <p className="text-gray-400 mt-2">
-          <SafeText>{`${playerStats?.playerName || "Player"} • ${playerStats?.tier || "Rookie"} Division`}</SafeText>
+          <SafeText>{`${playerStats?.playerName ?? "Player"} • ${playerStats?.tier ?? "—"} Division`}</SafeText>
         </p>
       </div>
 
@@ -45,8 +45,10 @@ export default function PlayerDashboard() {
             <Target className="h-4 w-4 text-neon-green" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{playerStats?.fargoRating || 425}</div>
-            <p className="text-xs text-gray-400">Change: +{playerStats?.ratingChange || 12} this week</p>
+            <div className="text-2xl font-bold text-white" data-testid="text-fargo-rating">{playerStats?.fargoRating ?? "—"}</div>
+            <p className="text-xs text-gray-400">
+              Change: {playerStats?.ratingChange != null ? `${playerStats.ratingChange > 0 ? "+" : ""}${playerStats.ratingChange}` : "—"} this week
+            </p>
           </CardContent>
         </Card>
 
@@ -56,8 +58,10 @@ export default function PlayerDashboard() {
             <Trophy className="h-4 w-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">#{playerStats?.ladderRank || 23}</div>
-            <p className="text-xs text-gray-400">in {playerStats?.division || "Rookie"} Division</p>
+            <div className="text-2xl font-bold text-white" data-testid="text-ladder-rank">
+              {playerStats?.ladderRank != null ? `#${playerStats.ladderRank}` : "—"}
+            </div>
+            <p className="text-xs text-gray-400">in {playerStats?.division ?? "—"} Division</p>
           </CardContent>
         </Card>
 
@@ -67,8 +71,8 @@ export default function PlayerDashboard() {
             <Zap className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{playerStats?.winStreak || 3}</div>
-            <p className="text-xs text-gray-400">Record: {playerStats?.recordStreak || 7} games</p>
+            <div className="text-2xl font-bold text-white" data-testid="text-win-streak">{playerStats?.winStreak ?? "—"}</div>
+            <p className="text-xs text-gray-400">Record: {playerStats?.recordStreak ?? "—"} games</p>
           </CardContent>
         </Card>
 
@@ -78,7 +82,7 @@ export default function PlayerDashboard() {
             <Star className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{playerStats?.respectPoints || 150}</div>
+            <div className="text-2xl font-bold text-white" data-testid="text-respect-points">{playerStats?.respectPoints ?? "—"}</div>
             <p className="text-xs text-gray-400">Good sportsmanship</p>
           </CardContent>
         </Card>
@@ -124,8 +128,8 @@ export default function PlayerDashboard() {
               </Button>
             </div>
             <div className="bg-green-900/20 border border-green-600/30 rounded p-3">
-              <div className="text-sm text-green-300">Pending: {challenges?.pending || 0}</div>
-              <div className="text-xs text-green-400">Available pools: {challenges?.availablePools || 5}</div>
+              <div className="text-sm text-green-300">Pending: {challenges?.pending ?? 0}</div>
+              <div className="text-xs text-green-400">Available pools: {challenges?.availablePools ?? "—"}</div>
             </div>
           </CardContent>
         </Card>
@@ -160,8 +164,8 @@ export default function PlayerDashboard() {
               </Button>
             </div>
             <div className="bg-blue-900/20 border border-blue-600/30 rounded p-3">
-              <div className="text-sm text-blue-300">W/L: {playerStats?.wins || 0}-{playerStats?.losses || 0}</div>
-              <div className="text-xs text-blue-400">Win rate: {playerStats?.winRate || 65}%</div>
+              <div className="text-sm text-blue-300">W/L: {playerStats?.wins ?? 0}-{playerStats?.losses ?? 0}</div>
+              <div className="text-xs text-blue-400">Win rate: {playerStats?.winRate != null ? `${playerStats.winRate}%` : "—"}</div>
             </div>
           </CardContent>
         </Card>
@@ -196,8 +200,8 @@ export default function PlayerDashboard() {
               </Button>
             </div>
             <div className="bg-amber-900/20 border border-amber-600/30 rounded p-3">
-              <div className="text-sm text-amber-300">Balance: ${playerStats?.walletBalance || 0}</div>
-              <div className="text-xs text-amber-400">Vote expires: {playerStats?.voteExpiry || "3 days"}</div>
+              <div className="text-sm text-amber-300">Balance: ${playerStats?.walletBalance ?? 0}</div>
+              <div className="text-xs text-amber-400">Vote expires: {playerStats?.voteExpiry ?? "—"}</div>
             </div>
           </CardContent>
         </Card>
@@ -216,19 +220,19 @@ export default function PlayerDashboard() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-purple-400">{playerStats?.avgGameScore || "7.2"}/10</div>
+                <div className="text-2xl font-bold text-purple-400">{playerStats?.avgGameScore ?? "—"}/10</div>
                 <div className="text-sm text-gray-400">Avg Game Score</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-neon-green">{playerStats?.breakAndRuns || 3}</div>
+                <div className="text-2xl font-bold text-neon-green">{playerStats?.breakAndRuns ?? "—"}</div>
                 <div className="text-sm text-gray-400">Break & Runs</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-400">{playerStats?.comebackWins || 5}</div>
+                <div className="text-2xl font-bold text-blue-400">{playerStats?.comebackWins ?? "—"}</div>
                 <div className="text-sm text-gray-400">Comeback Wins</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-yellow-400">{playerStats?.perfectGames || 1}</div>
+                <div className="text-2xl font-bold text-yellow-400">{playerStats?.perfectGames ?? "—"}</div>
                 <div className="text-sm text-gray-400">Perfect Games</div>
               </div>
             </div>
@@ -247,22 +251,28 @@ export default function PlayerDashboard() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-white font-bold">vs {playerStats?.nextOpponent || "Mike Chen"}</div>
-                  <div className="text-sm text-gray-400">{playerStats?.nextGameDate || "Tomorrow 7:00 PM"}</div>
+                  <div className="text-white font-bold" data-testid="text-next-opponent">
+                    vs {playerStats?.nextOpponent ?? "—"}
+                  </div>
+                  <div className="text-sm text-gray-400">{playerStats?.nextGameDate ?? "—"}</div>
                 </div>
-                <div className="text-dollar-green font-bold">${playerStats?.nextGameStake || 60}</div>
+                <div className="text-dollar-green font-bold">
+                  {playerStats?.nextGameStake != null ? `$${playerStats.nextGameStake}` : "—"}
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-white font-bold">Weekly Tournament</div>
-                  <div className="text-sm text-gray-400">{playerStats?.tournamentDate || "Friday 8:00 PM"}</div>
+                  <div className="text-sm text-gray-400">{playerStats?.tournamentDate ?? "—"}</div>
                 </div>
-                <div className="text-blue-400 font-bold">${playerStats?.tournamentEntry || 25}</div>
+                <div className="text-blue-400 font-bold">
+                  {playerStats?.tournamentEntry != null ? `$${playerStats.tournamentEntry}` : "—"}
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-white font-bold">Team Match</div>
-                  <div className="text-sm text-gray-400">{playerStats?.teamMatchDate || "Saturday 6:00 PM"}</div>
+                  <div className="text-sm text-gray-400">{playerStats?.teamMatchDate ?? "—"}</div>
                 </div>
                 <div className="text-purple-400 font-bold">Team Event</div>
               </div>
@@ -276,7 +286,7 @@ export default function PlayerDashboard() {
         <CardHeader>
           <CardTitle className="text-xl font-bold text-white flex items-center">
             <Trophy className="mr-3 text-yellow-400" />
-            Hall Leaderboard - {playerStats?.division || "Rookie"} Division
+            Hall Leaderboard - {playerStats?.division ?? "—"} Division
           </CardTitle>
         </CardHeader>
         <CardContent>

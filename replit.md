@@ -44,6 +44,7 @@ Action Ladder Billiards is a competitive billiards tournament ladder system with
 *   **Language Sanitization**: Automatic system to replace gambling-related terms with league-safe terminology, enforced via middleware.
 *   **WebView Mobile App**: Uses React Native with Expo as a WebView wrapper for the web app, integrating native features like camera for OCR and push notifications.
 *   **In-app Notifications**: New `notifications` table separate from `notificationDeliveries` (which tracks outbound email/SMS provider routing). `notifyService` is the single chokepoint — all helpers fire-and-forget via `safeCreate` so a failed notification never blocks the primary write. Client polls `/api/me/notifications` every 30s; cache key is scoped to the current user id to prevent leak across logout/login.
+*   **No fabricated UI defaults**: Components must never invent stat values (player names, ratings, ranks, opponents, dates) when API data is missing. Render a neutral placeholder (`—`) instead. Showing a fake `Mike Chen` or `Fargo 425` to users whose data hasn't loaded is worse than showing nothing — it looks like real data.
 
 ## Product
 
