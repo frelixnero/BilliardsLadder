@@ -35,6 +35,11 @@ import { registerHallRoutes } from "./routes/hall.routes";
 import { registerPlayerBillingRoutes } from "./services/playerBilling";
 import { registerQuickChallengeRoutes } from "./routes/quickChallenge.routes";
 import { getCareerStats, getPlayerEarnings, getPlayerServices, createPlayerService, activatePlayerService, withdrawNow } from "./controllers/playerCareer.controller";
+import {
+  getPlayerStats,
+  getPlayerChallengesSummary,
+  getPlayerLeaderboard,
+} from "./controllers/playerDashboard.controller";
 import { registerRevenueAdminRoutes } from "./routes/revenueAdmin.routes";
 import { sanitizeResponse } from "./middleware/sanitizeMiddleware";
 import { 
@@ -199,6 +204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Player Career Dashboard API Routes
   app.get('/api/player/career-stats', getCareerStats);
   app.get('/api/player/earnings', getPlayerEarnings);
+  // Dashboard panels — auth checked inside the controllers
+  app.get('/api/player/stats', getPlayerStats);
+  app.get('/api/player/challenges', getPlayerChallengesSummary);
+  app.get('/api/player/leaderboard', getPlayerLeaderboard);
   app.get('/api/player/services', getPlayerServices);
   app.post('/api/player/services', createPlayerService);
   app.post('/api/player/services/:id/activate', activatePlayerService);
