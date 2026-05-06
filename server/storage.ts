@@ -65,6 +65,7 @@ import {
   type StakesHold, type InsertStakesHold,
   type NotificationSettings, type InsertNotificationSettings,
   type NotificationDelivery, type InsertNotificationDelivery,
+  type Notification, type InsertNotification,
   type DisputeResolution, type InsertDisputeResolution,
   type PlayerCooldown, type InsertPlayerCooldown,
   type DeviceAttestation, type InsertDeviceAttestation,
@@ -820,6 +821,15 @@ export interface IStorage {
   markNotificationDelivered(id: string, providerId?: string): Promise<NotificationDelivery | undefined>;
   markNotificationFailed(id: string, errorMessage: string): Promise<NotificationDelivery | undefined>;
 
+  // In-app notification feed (notification bell)
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotificationsByUser(userId: string, opts?: { limit?: number; unreadOnly?: boolean }): Promise<Notification[]>;
+  getNotification(id: string): Promise<Notification | undefined>;
+  markNotificationRead(id: string): Promise<Notification | undefined>;
+  markAllNotificationsRead(userId: string): Promise<number>;
+  deleteNotification(id: string): Promise<boolean>;
+  countUnreadNotifications(userId: string): Promise<number>;
+
   // === DISPUTE MANAGEMENT ===
 
   // Dispute Resolutions
@@ -1085,6 +1095,7 @@ export class MemStorage implements IStorage {
   // === NOTIFICATION SYSTEM ===
   private notificationSettings = new Map<string, NotificationSettings>();
   private notificationDeliveries = new Map<string, NotificationDelivery>();
+  private notifications = new Map<string, Notification>();
 
   // === DISPUTE MANAGEMENT ===
   private disputeResolutions = new Map<string, DisputeResolution>();
@@ -5127,6 +5138,94 @@ export class MemStorage implements IStorage {
     });
   }
 
+  // In-app notification feed
+  // Cap per user to keep MemStorage bounded — notifications are ephemeral UX,
+  // older ones can be discarded silently once the cap is exceeded.
+  private static readonly MAX_NOTIFICATIONS_PER_USER = 200;
+
+  async createNotification(insert: InsertNotification): Promise<Notification> {
+    const id = randomUUID();
+    const notification: Notification = {
+      id,
+      userId: insert.userId,
+      type: insert.type,
+      title: insert.title,
+      message: insert.message,
+      urgent: insert.urgent ?? false,
+      actionUrl: insert.actionUrl ?? null,
+      refType: insert.refType ?? null,
+      refId: insert.refId ?? null,
+      readAt: null,
+      createdAt: new Date(),
+    };
+    this.notifications.set(id, notification);
+
+    // Trim oldest for this user if over the cap.
+    const userOnes: Notification[] = [];
+    for (const n of this.notifications.values()) {
+      if (n.userId === insert.userId) userOnes.push(n);
+    }
+    if (userOnes.length > MemStorage.MAX_NOTIFICATIONS_PER_USER) {
+      userOnes.sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0));
+      const overflow = userOnes.length - MemStorage.MAX_NOTIFICATIONS_PER_USER;
+      for (let i = 0; i < overflow; i++) {
+        this.notifications.delete(userOnes[i].id);
+      }
+    }
+
+    return notification;
+  }
+
+  async getNotificationsByUser(
+    userId: string,
+    opts: { limit?: number; unreadOnly?: boolean } = {},
+  ): Promise<Notification[]> {
+    const limit = opts.limit ?? 50;
+    let list = Array.from(this.notifications.values()).filter((n) => n.userId === userId);
+    if (opts.unreadOnly) list = list.filter((n) => n.readAt === null);
+    list.sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+    return list.slice(0, limit);
+  }
+
+  async getNotification(id: string): Promise<Notification | undefined> {
+    return this.notifications.get(id);
+  }
+
+  async markNotificationRead(id: string): Promise<Notification | undefined> {
+    const n = this.notifications.get(id);
+    if (!n) return undefined;
+    if (n.readAt === null) {
+      const updated: Notification = { ...n, readAt: new Date() };
+      this.notifications.set(id, updated);
+      return updated;
+    }
+    return n;
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<number> {
+    let count = 0;
+    const now = new Date();
+    for (const [id, n] of this.notifications) {
+      if (n.userId === userId && n.readAt === null) {
+        this.notifications.set(id, { ...n, readAt: now });
+        count++;
+      }
+    }
+    return count;
+  }
+
+  async deleteNotification(id: string): Promise<boolean> {
+    return this.notifications.delete(id);
+  }
+
+  async countUnreadNotifications(userId: string): Promise<number> {
+    let count = 0;
+    for (const n of this.notifications.values()) {
+      if (n.userId === userId && n.readAt === null) count++;
+    }
+    return count;
+  }
+
   // === DISPUTE MANAGEMENT ===
   async getDisputeResolution(id: string): Promise<DisputeResolution | undefined> {
     return this.disputeResolutions.get(id);
@@ -6252,6 +6351,15 @@ export class DatabaseStorage implements IStorage {
   async createNotificationDelivery(delivery: InsertNotificationDelivery): Promise<NotificationDelivery> { return this.memStorage.createNotificationDelivery(delivery); }
   async updateNotificationDelivery(id: string, updates: Partial<InsertNotificationDelivery>): Promise<NotificationDelivery | undefined> { return this.memStorage.updateNotificationDelivery(id, updates); }
   async deleteNotificationDelivery(id: string): Promise<boolean> { return this.memStorage.deleteNotificationDelivery(id); }
+
+  // In-app notification feed — delegate to MemStorage until DB-backed.
+  async createNotification(notification: InsertNotification): Promise<Notification> { return this.memStorage.createNotification(notification); }
+  async getNotificationsByUser(userId: string, opts?: { limit?: number; unreadOnly?: boolean }): Promise<Notification[]> { return this.memStorage.getNotificationsByUser(userId, opts); }
+  async getNotification(id: string): Promise<Notification | undefined> { return this.memStorage.getNotification(id); }
+  async markNotificationRead(id: string): Promise<Notification | undefined> { return this.memStorage.markNotificationRead(id); }
+  async markAllNotificationsRead(userId: string): Promise<number> { return this.memStorage.markAllNotificationsRead(userId); }
+  async deleteNotification(id: string): Promise<boolean> { return this.memStorage.deleteNotification(id); }
+  async countUnreadNotifications(userId: string): Promise<number> { return this.memStorage.countUnreadNotifications(userId); }
 
   async getDisputeResolutions(): Promise<DisputeResolution[]> { return this.memStorage.getDisputeResolutions(); }
   async getDisputeResolution(id: string): Promise<DisputeResolution | undefined> { return this.memStorage.getDisputeResolution(id); }

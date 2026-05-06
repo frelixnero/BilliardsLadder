@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { storage } from "../storage";
 import { z } from "zod";
+import { notifyChallengeReceived } from "../services/notifyService";
 
 const quickChallengeSchema = z.object({
   opponentId: z.string().min(1),
@@ -94,6 +95,16 @@ export async function createQuickChallenge(req: Request, res: Response) {
     };
 
     const challenge = await storage.createChallenge(challengeData);
+
+    // Fire-and-forget: notify the opponent. Failure here must never block
+    // the challenge from being created.
+    notifyChallengeReceived({
+      challengeId: challenge.id,
+      challengerName: currentPlayer.name,
+      opponentUserId: opponent.userId,
+      stakesCents: challengeData.stakes,
+      gameType: validatedData.gameType,
+    });
 
     res.status(201).json({
       success: true,

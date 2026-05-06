@@ -2161,6 +2161,25 @@ export const notificationDeliveries = pgTable("notification_deliveries", {
   typeIdx: index("notification_deliveries_type_idx").on(table.type),
 }));
 
+// In-app notifications shown in the user's notification bell.
+// Distinct from notificationDeliveries which tracks outbound email/SMS/push provider routing.
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  type: text("type").notNull(), // "challenge", "match_result", "tournament", "ladder_change", "rookie_graduation", "hall_battle", "ban", "appeal", "payment", "system"
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  urgent: boolean("urgent").notNull().default(false),
+  actionUrl: text("action_url"),
+  refType: text("ref_type"), // e.g. "challenge", "match", "tournament", "appeal"
+  refId: text("ref_id"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userIdx: index("notifications_user_idx").on(table.userId),
+  userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),
+}));
+
 // === DISPUTE MANAGEMENT SYSTEM ===
 
 // Evidence and dispute resolution tracking
@@ -2337,6 +2356,12 @@ export const insertNotificationDeliverySchema = createInsertSchema(notificationD
   createdAt: true,
 });
 
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  readAt: true,
+  createdAt: true,
+});
+
 export const insertDisputeResolutionSchema = createInsertSchema(disputeResolutions).omit({
   id: true,
   createdAt: true,
@@ -2380,6 +2405,8 @@ export type NotificationSettings = typeof notificationSettings.$inferSelect;
 export type InsertNotificationSettings = z.infer<typeof insertNotificationSettingsSchema>;
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
 export type InsertNotificationDelivery = z.infer<typeof insertNotificationDeliverySchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type DisputeResolution = typeof disputeResolutions.$inferSelect;
 export type InsertDisputeResolution = z.infer<typeof insertDisputeResolutionSchema>;
 export type PlayerCooldown = typeof playerCooldowns.$inferSelect;

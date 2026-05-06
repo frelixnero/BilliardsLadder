@@ -114,6 +114,20 @@ export function createChallenge(storage: IStorage) {
         if (player?.userId) touchUserActivity(storage, player.userId);
       }
 
+      // Fire-and-forget: notify the opponent that they've been challenged.
+      try {
+        const { notifyChallengeReceived } = await import("../services/notifyService");
+        notifyChallengeReceived({
+          challengeId: challenge.id,
+          challengerName: playerA.name,
+          opponentUserId: playerB.userId,
+          stakesCents: challenge.stakes ?? 0,
+          gameType: challenge.gameType ?? "8-ball",
+        });
+      } catch (notifyErr: any) {
+        console.warn("[challenges] notify failed:", notifyErr?.message);
+      }
+
       res.status(201).json(challenge);
     } catch (error: any) {
       console.error("Create challenge error:", error);
@@ -176,6 +190,62 @@ export function updateChallenge(storage: IStorage) {
           }
         } catch (rewardErr: any) {
           console.warn("[challenges] rack points award failed:", rewardErr?.message);
+        }
+
+        // Fire-and-forget: notify both players of the result.
+        try {
+          const { notifyMatchResult } = await import("../services/notifyService");
+          const winnerPlayerId = updatedChallenge.winnerId!;
+          const loserPlayerId =
+            winnerPlayerId === updatedChallenge.aPlayerId
+              ? updatedChallenge.bPlayerId
+              : updatedChallenge.aPlayerId;
+          const [winnerPlayer, loserPlayer] = await Promise.all([
+            storage.getPlayer(winnerPlayerId),
+            storage.getPlayer(loserPlayerId),
+          ]);
+          if (winnerPlayer?.userId) {
+            notifyMatchResult({
+              challengeId: updatedChallenge.id,
+              recipientUserId: winnerPlayer.userId,
+              won: true,
+              opponentName: loserPlayer?.name ?? "your opponent",
+            });
+          }
+          if (loserPlayer?.userId) {
+            notifyMatchResult({
+              challengeId: updatedChallenge.id,
+              recipientUserId: loserPlayer.userId,
+              won: false,
+              opponentName: winnerPlayer?.name ?? "your opponent",
+            });
+          }
+        } catch (notifyErr: any) {
+          console.warn("[challenges] notify match result failed:", notifyErr?.message);
+        }
+      }
+
+      // Detect status transition to "accepted" and notify the challenger.
+      if (
+        updatedChallenge &&
+        updatedChallenge.status === "accepted" &&
+        challenge.status !== "accepted"
+      ) {
+        try {
+          const { notifyChallengeAccepted } = await import("../services/notifyService");
+          const [aPlayer, bPlayer] = await Promise.all([
+            storage.getPlayer(updatedChallenge.aPlayerId),
+            storage.getPlayer(updatedChallenge.bPlayerId),
+          ]);
+          if (aPlayer?.userId) {
+            notifyChallengeAccepted({
+              challengeId: updatedChallenge.id,
+              recipientUserId: aPlayer.userId,
+              otherPlayerName: bPlayer?.name ?? "Your opponent",
+            });
+          }
+        } catch (notifyErr: any) {
+          console.warn("[challenges] notify accept failed:", notifyErr?.message);
         }
       }
 
