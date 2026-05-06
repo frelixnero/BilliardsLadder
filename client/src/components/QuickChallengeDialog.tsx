@@ -315,7 +315,7 @@ export function QuickChallengeDialog({ isOpen, onClose }: QuickChallengeDialogPr
                 <div>• Auto-approved for immediate play</div>
                 <div>• Standard 90-minute time limit</div>
                 <div>• Race to 7 format (8-Ball/9-Ball)</div>
-                <div>• 9ft table at Downtown Billiards</div>
+                <div>• Played at the selected pool hall</div>
               </div>
             </div>
 
