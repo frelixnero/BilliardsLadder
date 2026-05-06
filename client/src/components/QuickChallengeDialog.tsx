@@ -70,33 +70,8 @@ export function QuickChallengeDialog({ isOpen, onClose }: QuickChallengeDialogPr
 
   const createChallengeMutation = useMutation({
     mutationFn: async (data: QuickChallengeFormData) => {
-      const challengeTime = new Date();
-      const [hours, minutes] = data.timeSlot.split(':').map(Number);
-      challengeTime.setHours(hours, minutes, 0, 0);
-      
-      // If time is in the past, assume it's for tomorrow
-      if (challengeTime < new Date()) {
-        challengeTime.setDate(challengeTime.getDate() + 1);
-      }
-
-      const challengeData = {
-        aPlayerId: 'current-player-id', // This would come from user context
-        bPlayerId: data.opponentId,
-        aPlayerName: 'Current Player', // This would come from user context
-        bPlayerName: players.find(p => p.id === data.opponentId)?.name || 'Unknown',
-        gameType: data.gameType,
-        tableType: '9ft',
-        stakes: parseInt(data.stakes) * 100, // Convert to cents
-        hallId: data.hallId,
-        scheduledAt: challengeTime.toISOString(),
-        title: `Quick ${data.gameType} Challenge`,
-        format: 'race-to-7',
-        status: 'pending',
-        description: 'Quick challenge created from dashboard',
-        autoApproved: true, // Quick challenges are auto-approved
-        durationMinutes: 90,
-      };
-
+      // Identity (aPlayerId / aPlayerName) is derived from the authenticated
+      // session on the server — never trust the client for that.
       return apiRequest('/api/quick-challenge', {
         method: 'POST',
         body: JSON.stringify({
@@ -141,11 +116,11 @@ export function QuickChallengeDialog({ isOpen, onClose }: QuickChallengeDialogPr
     onClose();
   };
 
-  // Available players for quick challenge (excluding current user)
-  const availablePlayers = players.filter((player: Player) => 
-    player.id !== 'current-player-id' && // Filter out current user
-    player.rating >= 400 // Only show active players
-  ).slice(0, 8); // Limit to 8 for quick selection
+  // Available players for quick challenge.
+  // The server enforces "no self-challenge"; we just filter for active players here.
+  const availablePlayers = players
+    .filter((player: Player) => player.rating >= 400)
+    .slice(0, 8);
 
   // Quick time slots for today/tomorrow
   const timeSlots = [
