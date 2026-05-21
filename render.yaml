@@ -5,7 +5,7 @@ services:
     plan: starter
     autoDeploy: true
     buildCommand: npm ci && npm run build
-    preDeployCommand: cd server && npm run db:push
+    preDeployCommand: npm run db:push
     startCommand: npm run start
     healthCheckPath: /healthz
     envVars:
@@ -41,9 +41,25 @@ services:
         sync: false
       - key: APP_BASE_URL
         sync: false
+      - key: APP_URL
+        sync: false
       - key: REPLIT_DOMAINS
+        sync: false
+      - key: RENDER_EXTERNAL_URL
         sync: false
       - key: REPL_ID
         sync: false
       - key: ISSUER_URL
         value: https://replit.com/oidc
+      - key: PLAYER_ROOKIE_MONTHLY_PRICE_ID
+        sync: false
+      - key: PLAYER_STANDARD_MONTHLY_PRICE_ID
+        sync: false
+      - key: PLAYER_PREMIUM_MONTHLY_PRICE_ID
+        sync: false
+      - key: PLAYER_ROOKIE_YEARLY_PRICE_ID
+        sync: false
+      - key: PLAYER_STANDARD_YEARLY_PRICE_ID
+        sync: false
+      - key: PLAYER_PREMIUM_YEARLY_PRICE_ID
+        sync: false
