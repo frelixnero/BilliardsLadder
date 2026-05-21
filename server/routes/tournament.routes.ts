@@ -22,7 +22,7 @@ export function setupTournamentRoutes(app: Express, storage: IStorage, stripe: S
   );
   app.get("/api/match-divisions", tournamentController.getMatchDivisions(storage));
   app.get("/api/match-divisions/:id", tournamentController.getMatchDivision(storage));
-  app.get("/api/match-entries/:id", isAuthenticated, tournamentController.getMatchEntry(storage));
+  app.get("/api/match-entries/:id", requireStaffOrOwner, tournamentController.getMatchEntry(storage));
 
   // Writes — staff/operator create matches and tournaments; players enter matches
   app.post("/api/matches",
@@ -70,7 +70,7 @@ export function setupTournamentRoutes(app: Express, storage: IStorage, stripe: S
   );
 
   app.patch("/api/match-entries/:id",
-    requireAnyAuth,
+    requireStaffOrOwner,
     sanitizeBody(["description"]),
     tournamentController.updateMatchEntry(storage)
   );

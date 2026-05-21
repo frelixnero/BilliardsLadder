@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Flame, Coins, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Popover,
   PopoverContent,
@@ -34,6 +35,11 @@ function formatRelativeTime(iso: string | Date): string {
 
 export function RackPointsBadge() {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const {
     data: state,
@@ -170,9 +176,8 @@ export function RackPointsBadge() {
                       </div>
                     </div>
                     <div
-                      className={`font-bold tabular-nums ${
-                        positive ? "text-emerald-300" : "text-red-300"
-                      }`}
+                      className={`font-bold tabular-nums ${positive ? "text-emerald-300" : "text-red-300"
+                        }`}
                       data-testid={`text-ledger-delta-${e.id}`}
                     >
                       {positive ? "+" : ""}

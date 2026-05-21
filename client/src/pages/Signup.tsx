@@ -216,11 +216,10 @@ export default function Signup() {
                 type="button"
                 variant={accountType === "player" ? "default" : "outline"}
                 onClick={() => setAccountType("player")}
-                className={`h-auto py-3 px-4 ${
-                  accountType === "player"
+                className={`h-auto py-3 px-4 ${accountType === "player"
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                     : "border-gray-600 hover:bg-gray-800 text-white"
-                }`}
+                  }`}
                 data-testid="button-select-player"
               >
                 <User className="h-4 w-4 mb-1" />
@@ -230,11 +229,10 @@ export default function Signup() {
                 type="button"
                 variant={accountType === "operator" ? "default" : "outline"}
                 onClick={() => setAccountType("operator")}
-                className={`h-auto py-3 px-4 ${
-                  accountType === "operator"
+                className={`h-auto py-3 px-4 ${accountType === "operator"
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                     : "border-gray-600 hover:bg-gray-800 text-white"
-                }`}
+                  }`}
                 data-testid="button-select-operator"
               >
                 <Building2 className="h-4 w-4 mb-1" />

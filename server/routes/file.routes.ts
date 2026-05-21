@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { IStorage } from "../storage";
-import { isAuthenticated } from "../replitAuth";
+import { requireAnyAuth } from "../middleware/auth";
 import * as fileController from "../controllers/file.controller";
 
 export function setupFileRoutes(app: Express, storage: IStorage) {
@@ -11,48 +11,48 @@ export function setupFileRoutes(app: Express, storage: IStorage) {
   );
 
   app.get("/objects/:objectPath(*)",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.servePrivateObject(storage)
   );
 
   // All file CRUD requires auth — controllers must enforce per-file ownership.
   app.post("/api/objects/upload",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.getUploadURL(storage)
   );
 
   app.put("/api/files",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.createFileRecord(storage)
   );
 
   app.get("/api/files",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.getUserFiles(storage)
   );
 
   app.get("/api/files/:id",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.getFileDetails(storage)
   );
 
   app.delete("/api/files/:id",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.deleteFile(storage)
   );
 
   app.post("/api/files/:id/share",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.createFileShare(storage)
   );
 
   app.get("/api/files/:id/shares",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.getFileShares(storage)
   );
 
   app.delete("/api/shares/:shareId",
-    isAuthenticated,
+    requireAnyAuth,
     fileController.deleteFileShare(storage)
   );
 }

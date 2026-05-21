@@ -650,6 +650,9 @@ export default function Dashboard() {
         let verified = false;
         let attempts = 0;
         const maxAttempts = 5;
+        const previousOperatorSubscription = isOperator
+          ? queryClient.getQueryData<{ tier?: string; status?: string }>(["/api/operator-subscriptions", user?.id])
+          : null;
 
         while (!verified && sessionId && attempts < maxAttempts) {
           attempts += 1;
@@ -673,7 +676,7 @@ export default function Dashboard() {
                   hallName: data.hallName,
                 });
               } else {
-                queryClient.setQueryData(["/api/player-billing/status"], {
+                queryClient.setQueryData(["/api/player-billing/status", user?.id], {
                   hasSubscription: true,
                   tier: data.tier,
                   status: data.status || "active",
@@ -695,17 +698,26 @@ export default function Dashboard() {
           if (isOperator) {
             await queryClient.refetchQueries({ queryKey: ["/api/operator-subscriptions", user?.id], type: "all" });
           } else {
-            await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status"], type: "all" });
+            await queryClient.refetchQueries({ queryKey: ["/api/player-billing/status", user?.id], type: "all" });
           }
         }
 
         if (verified || sessionId) {
           setShowSuccessBanner(true);
+          const oldTier = previousOperatorSubscription?.tier;
+          const newTier = isOperator ? (queryClient.getQueryData<{ tier?: string }>(["/api/operator-subscriptions", user?.id])?.tier) : undefined;
+          const hasTierChange = !!(oldTier && newTier && oldTier !== newTier);
           toast({
             title: "Subscription Activated!",
-            description: verified
-              ? "Your membership is now active. Welcome to the ladder!"
-              : "Payment completed. Subscription status may take a few seconds to update.",
+            description: isOperator
+              ? (hasTierChange
+                ? `Operator subscription upgraded: ${oldTier} -> ${newTier}.`
+                : verified
+                  ? `Operator subscription is active${newTier ? ` on ${newTier}` : ""}.`
+                  : "Payment completed. Subscription status may take a few seconds to update.")
+              : (verified
+                ? "Your membership is now active. Welcome to the ladder!"
+                : "Payment completed. Subscription status may take a few seconds to update."),
           });
         }
 

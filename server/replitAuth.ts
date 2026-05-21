@@ -144,7 +144,7 @@ export async function setupAuth(app: Express) {
     if (role && ["player", "operator", "admin"].includes(role)) {
       (req.session as any).intendedRole = role;
     }
-    
+
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -247,7 +247,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
 export const requireOwner: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
-  
+
   if (!req.isAuthenticated() || !user) {
     return res.status(401).json({ message: "Authentication required" });
   }
@@ -271,7 +271,7 @@ export const requireOwner: RequestHandler = async (req, res, next) => {
 
 export const requireStaffOrOwner: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
-  
+
   if (!req.isAuthenticated() || !user) {
     return res.status(401).json({ message: "Authentication required" });
   }
@@ -288,7 +288,7 @@ export const requireStaffOrOwner: RequestHandler = async (req, res, next) => {
     }
 
     if (dbUser.accountStatus === "banned") {
-      req.logout(() => {});
+      req.logout(() => { });
       return res.status(403).json({
         message: "Your account has been banned.",
         accountBanned: true,
@@ -306,7 +306,7 @@ export const requireStaffOrOwner: RequestHandler = async (req, res, next) => {
           banExpiresAt: null,
         });
       } else {
-        req.logout(() => {});
+        req.logout(() => { });
         return res.status(403).json({
           message: "Your account is suspended.",
           accountSuspended: true,

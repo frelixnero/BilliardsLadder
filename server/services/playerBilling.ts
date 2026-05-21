@@ -376,16 +376,6 @@ export function registerPlayerBillingRoutes(app: Express) {
       console.log(`🔍 Verify session: Found player ${player.id} for userId ${userId}`);
 
       const existing = await storage.getMembershipSubscriptionByPlayerId(player.id);
-      if (existing && existing.status === "active") {
-        console.log(`✅ Verify session: Found existing active subscription for player ${player.id}`);
-        const tierInfo = getPlayerSubscriptionTier(existing.tier);
-        return res.json({
-          hasSubscription: true,
-          tier: existing.tier,
-          status: existing.status,
-          tierInfo,
-        });
-      }
 
       console.log(`🔍 Verify session: Retrieving session ${sessionId} from Stripe...`);
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -442,20 +432,35 @@ export function registerPlayerBillingRoutes(app: Express) {
       const tierInfo = getPlayerSubscriptionTier(tier);
 
       try {
-        const subscription = await storage.createMembershipSubscription({
-          playerId: player.id,
-          tier,
-          status: "active",
-          stripeSubscriptionId: stripeSubId,
-          stripeCustomerId: session.customer as string || null,
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: periodEnd,
-          cancelAtPeriodEnd: false,
-          monthlyPrice: tierInfo?.monthlyPrice || 0,
-          perks: tierInfo?.perks || [],
-          commissionRate: tierInfo?.commissionRate || 1000,
-        });
-        console.log(`✅ Created membership subscription:`, subscription);
+        if (existing) {
+          await storage.updateMembershipSubscription(existing.id, {
+            tier,
+            status: "active",
+            stripeSubscriptionId: stripeSubId || existing.stripeSubscriptionId,
+            stripeCustomerId: (session.customer as string) || existing.stripeCustomerId,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: false,
+            monthlyPrice: tierInfo?.monthlyPrice || existing.monthlyPrice,
+            perks: tierInfo?.perks || existing.perks || [],
+            commissionRate: tierInfo?.commissionRate || existing.commissionRate,
+          });
+          console.log(`✅ Updated membership subscription for player ${player.id} to tier ${tier}`);
+        } else {
+          const subscription = await storage.createMembershipSubscription({
+            playerId: player.id,
+            tier,
+            status: "active",
+            stripeSubscriptionId: stripeSubId,
+            stripeCustomerId: session.customer as string || null,
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: false,
+            monthlyPrice: tierInfo?.monthlyPrice || 0,
+            perks: tierInfo?.perks || [],
+            commissionRate: tierInfo?.commissionRate || 1000,
+          });
+          console.log(`✅ Created membership subscription:`, subscription);
+        }
 
         await storage.updatePlayer(player.id, { member: true });
         console.log(`✅ Updated player.member = true for player ${player.id}`);

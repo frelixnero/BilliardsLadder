@@ -318,7 +318,7 @@ export default function Login() {
           title: "Welcome Back!",
           description: "Login successful.",
         });
-        
+
         if (user?.globalRole === "OWNER") {
           window.location.href = "/app?tab=admin";
         } else if (user?.globalRole === "TRUSTEE") {
@@ -360,7 +360,7 @@ export default function Login() {
           });
           return;
         }
-      } catch {}
+      } catch { }
       if (errMsg.includes("verify your email")) {
         setUnverifiedEmail(form.getValues("email"));
         return;

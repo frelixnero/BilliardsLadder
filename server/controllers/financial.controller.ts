@@ -623,14 +623,6 @@ export function verifyOperatorSession(storage: IStorage) {
       }
 
       const existing = await storage.getOperatorSubscription(userId);
-      if (existing && existing.status === "active") {
-        return res.json({
-          hasSubscription: true,
-          tier: existing.tier,
-          status: existing.status,
-          hallName: existing.hallName,
-        });
-      }
 
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       const isSuccessful = session?.payment_status === "paid" || session?.payment_status === "no_payment_required" || session?.status === "complete";
@@ -666,13 +658,13 @@ export function verifyOperatorSession(storage: IStorage) {
       const stripeSubId = (session.subscription as string) || null;
       const stripeCustomerId = (session.customer as string) || null;
 
-      if (existing && (existing.status === "cancelled" || existing.status === "past_due")) {
+      if (existing) {
         const updated = await storage.updateOperatorSubscription(userId, {
           tier,
           basePriceMonthly: tierPrices[tier] || 19900,
           totalMonthlyCharge: tierPrices[tier] || 19900,
-          stripeSubscriptionId: stripeSubId,
-          stripeCustomerId: stripeCustomerId,
+          stripeSubscriptionId: stripeSubId || existing.stripeSubscriptionId,
+          stripeCustomerId: stripeCustomerId || existing.stripeCustomerId,
           status: "active",
           nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
