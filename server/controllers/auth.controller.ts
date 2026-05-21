@@ -405,7 +405,22 @@ export function logout(req: Request, res: Response) {
     if (err) {
       return res.status(500).json({ message: "Logout failed" });
     }
-    res.json({ message: "Logged out successfully" });
+
+    req.session?.destroy((sessionErr) => {
+      if (sessionErr) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+
+      // Clear session cookie so UI auth state cannot persist with stale browser cookies.
+      res.clearCookie("connect.sid", {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+
+      res.json({ message: "Logged out successfully" });
+    });
   });
 }
 
