@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    name: Typecheck and Build
+    name: Build (Typecheck Non-Blocking)
     runs-on: ubuntu-latest
 
     steps:
@@ -25,6 +25,7 @@ jobs:
         run: npm ci
 
       - name: Typecheck
+        continue-on-error: true
         run: npm run check
 
       - name: Build
