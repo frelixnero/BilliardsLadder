@@ -327,7 +327,14 @@ export default function TournamentBrackets() {
 
   function addPlayer() {
     const n = pName.trim();
-    if (!n) return;
+    if (!n) {
+      toast({
+        title: "Player Name Required",
+        description: "Enter a player name before adding.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (players.some(p => p.name.toLowerCase() === n.toLowerCase())) {
       toast({
         title: "Player Already Added",
@@ -638,17 +645,23 @@ export default function TournamentBrackets() {
                   <Label className="text-gray-300">Format</Label>
                   <div className="flex space-x-4 mt-2">
                     <Button
+                      type="button"
                       variant={format === "single" ? "default" : "outline"}
                       onClick={() => setFormat("single")}
-                      className={format === "single" ? "bg-neon-green text-black" : "border-neon-green/50 text-neon-green"}
+                      className={format === "single"
+                        ? "bg-neon-green text-black border border-neon-green"
+                        : "bg-transparent border-neon-green/50 text-neon-green hover:bg-neon-green/10"}
                       data-testid="button-format-single"
                     >
                       Single Elimination
                     </Button>
                     <Button
+                      type="button"
                       variant={format === "double" ? "default" : "outline"}
                       onClick={() => setFormat("double")}
-                      className={format === "double" ? "bg-neon-green text-black" : "border-neon-green/50 text-neon-green"}
+                      className={format === "double"
+                        ? "bg-neon-green text-black border border-neon-green"
+                        : "bg-transparent border-neon-green/50 text-neon-green hover:bg-neon-green/10"}
                       data-testid="button-format-double"
                     >
                       Double Elimination
@@ -678,6 +691,7 @@ export default function TournamentBrackets() {
                     data-testid="input-player-name"
                   />
                   <Button
+                    type="button"
                     onClick={addPlayer}
                     className="bg-neon-green text-black hover:bg-neon-green/80"
                     data-testid="button-add-player"
