@@ -50,7 +50,7 @@ async function getPlayerRankings(limit: number = 10): Promise<string> {
 
 async function callOpenAI(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]): Promise<string> {
   if (!openai) {
-    return 'AI service is not configured. Please set the OPENAI_API_KEY environment variable.';
+    return 'AI insights are currently unavailable. Please try again later.';
   }
   try {
     const completion = await openai.chat.completions.create({
