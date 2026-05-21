@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import type { Player, Match, Bounty } from '../../../shared/schema';
 import { WeightRulesDisplay } from '@/components/weight-rules-display';
 
@@ -13,6 +14,7 @@ interface PlayerWithRank extends Player {
 }
 
 const BarboxLadderPage: React.FC = () => {
+  const [, navigate] = useLocation();
   const { data: players = [], isLoading: playersLoading } = useQuery<Player[]>({
     queryKey: ['/api/players'],
   });
@@ -367,12 +369,14 @@ const BarboxLadderPage: React.FC = () => {
           <button 
             className="bg-green-600 hover:bg-green-700 text-black font-bold px-6 py-3 rounded transition-colors"
             data-testid="button-barbox-lock-in"
+            onClick={() => navigate('/?tab=escrow-challenges')}
           >
             Lock Into Action
           </button>
           <button 
             className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-6 py-3 rounded transition-colors"
             data-testid="button-barbox-view-pools"
+            onClick={() => navigate('/?tab=escrow-challenges')}
           >
             View Match Pools
           </button>

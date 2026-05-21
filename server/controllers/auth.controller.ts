@@ -50,6 +50,32 @@ function generateVerificationToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+async function sendVerificationWithRetry(
+  email: string,
+  verificationToken: string,
+  name: string | undefined,
+  roleLabel: "operator" | "player" | "resend"
+): Promise<boolean> {
+  const baseUrl = getAppBaseUrl();
+
+  try {
+    return await emailService.sendVerificationEmail(email, verificationToken, name, baseUrl);
+  } catch (firstError) {
+    console.error(`[auth] Verification email first attempt failed for ${roleLabel} ${email}:`, firstError);
+  }
+
+  try {
+    return await emailService.sendVerificationEmail(email, verificationToken, name, baseUrl);
+  } catch (secondError) {
+    console.error(`[auth] Verification email retry failed for ${roleLabel} ${email}:`, secondError);
+    return false;
+  }
+}
+
 function getAppBaseUrl(): string {
   const configuredBaseUrl = process.env.APP_BASE_URL?.trim();
   if (configuredBaseUrl) {
@@ -230,9 +256,10 @@ export async function createOwner(req: Request, res: Response) {
 export async function signupOperator(req: Request, res: Response) {
   try {
     const operatorData = createOperatorSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(operatorData.email);
 
     // Check if email already exists
-    const existingUser = await storage.getUserByEmail(operatorData.email);
+    const existingUser = await storage.getUserByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(409).json({ message: "Email already registered" });
     }
@@ -244,7 +271,7 @@ export async function signupOperator(req: Request, res: Response) {
     const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const newUser = await storage.createUser({
-      email: operatorData.email,
+      email: normalizedEmail,
       name: operatorData.name,
       globalRole: "OPERATOR",
       passwordHash,
@@ -264,12 +291,12 @@ export async function signupOperator(req: Request, res: Response) {
       console.warn(`[activity] Failed to touch user ${newUser.id}:`, err?.message || err);
     });
 
-    emailService.sendVerificationEmail(
-      operatorData.email,
+    const verificationEmailSent = await sendVerificationWithRetry(
+      normalizedEmail,
       verificationToken,
       operatorData.name,
-      getAppBaseUrl()
-    ).catch(err => console.error("Failed to send verification email:", err));
+      "operator"
+    );
 
     res.status(201).json({
       user: {
@@ -280,8 +307,11 @@ export async function signupOperator(req: Request, res: Response) {
         hallName: newUser.hallName,
         subscriptionTier: newUser.subscriptionTier,
       },
-      message: "Account created! Please check your email to verify your address before logging in.",
+      message: verificationEmailSent
+        ? "Account created! Please check your email to verify your address before logging in."
+        : "Account created, but we could not send your verification email right now. Please use Resend Verification Email.",
       requiresVerification: true,
+      verificationEmailSent,
     });
 
   } catch (error: any) {
@@ -293,9 +323,10 @@ export async function signupOperator(req: Request, res: Response) {
 export async function signupPlayer(req: Request, res: Response) {
   try {
     const playerData = createPlayerSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(playerData.email);
 
     // Check if email already exists
-    const existingUser = await storage.getUserByEmail(playerData.email);
+    const existingUser = await storage.getUserByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(409).json({ message: "Email already registered" });
     }
@@ -306,7 +337,7 @@ export async function signupPlayer(req: Request, res: Response) {
     const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const newUser = await storage.createUser({
-      email: playerData.email,
+      email: normalizedEmail,
       name: playerData.name,
       globalRole: "PLAYER",
       passwordHash,
@@ -330,12 +361,12 @@ export async function signupPlayer(req: Request, res: Response) {
       rookiePassActive: playerData.tier === "rookie",
     });
 
-    emailService.sendVerificationEmail(
-      playerData.email,
+    const verificationEmailSent = await sendVerificationWithRetry(
+      normalizedEmail,
       verificationToken,
       playerData.name,
-      getAppBaseUrl()
-    ).catch(err => console.error("Failed to send verification email:", err));
+      "player"
+    );
 
     res.status(201).json({
       user: {
@@ -350,8 +381,11 @@ export async function signupPlayer(req: Request, res: Response) {
         tier: playerData.tier,
         membershipTier: player.membershipTier,
       },
-      message: "Account created! Please check your email to verify your address before logging in.",
+      message: verificationEmailSent
+        ? "Account created! Please check your email to verify your address before logging in."
+        : "Account created, but we could not send your verification email right now. Please use Resend Verification Email.",
       requiresVerification: true,
+      verificationEmailSent,
     });
 
   } catch (error: any) {
@@ -660,7 +694,8 @@ export async function verifyEmail(req: Request, res: Response) {
 
 export async function resendVerification(req: Request, res: Response) {
   try {
-    const { email } = req.body;
+    const normalizedEmail = normalizeEmail(String(req.body?.email || ""));
+    const email = normalizedEmail;
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -682,12 +717,16 @@ export async function resendVerification(req: Request, res: Response) {
       verificationTokenExpiry,
     });
 
-    await emailService.sendVerificationEmail(
+    const sent = await sendVerificationWithRetry(
       email,
       verificationToken,
       user.name || undefined,
-      getAppBaseUrl()
+      "resend"
     );
+
+    if (!sent) {
+      return res.status(502).json({ message: "Failed to resend verification email" });
+    }
 
     res.json({ message: "If an account exists with that email, a verification link has been sent." });
   } catch (error: any) {

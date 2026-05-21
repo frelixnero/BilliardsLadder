@@ -39,5 +39,6 @@ export function setupPoolRoutes(app: Express, storage: IStorage, stripe: Stripe)
   app.get("/api/escrow-challenges", isAuthenticated, poolController.getEscrowChallenges(storage));
   app.post("/api/escrow-challenges", requireAnyAuth, poolController.createEscrowChallenge(storage, stripe));
   app.post("/api/escrow-challenges/:id/accept", requireAnyAuth, poolController.acceptEscrowChallenge(storage));
+  app.post("/api/escrow-challenges/:id/cancel", requireAnyAuth, poolController.cancelEscrowChallenge(storage));
   app.get("/api/escrow-challenges/stats", isAuthenticated, poolController.getEscrowChallengeStats(storage));
 }

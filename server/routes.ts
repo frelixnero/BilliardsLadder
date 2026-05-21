@@ -197,6 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Poster Generation Routes
   app.use('/api/poster', createPosterRoutes(storage));
+  app.use('/api/posters', createPosterRoutes(storage));
   
   // Payment Onboarding Routes (SetupIntent collection)
   setupPaymentOnboardingRoutes(app, storage);

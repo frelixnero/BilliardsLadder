@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { WeightRulesDisplay } from '@/components/weight-rules-display';
 import { TutoringSystem } from '@/components/tutoring-system';
 
@@ -31,6 +32,7 @@ interface Bounty {
 }
 
 export default function EightFootLadderPage() {
+  const [, navigate] = useLocation();
   const { data: players = [], isLoading: playersLoading } = useQuery<Player[]>({
     queryKey: ["/api/players"],
   });
@@ -114,7 +116,7 @@ export default function EightFootLadderPage() {
           fargoRating={650}
           monthlySessions={1}
           availableCredits={15}
-          onScheduleSession={() => console.log('Schedule tutoring session')}
+          onScheduleSession={() => navigate('/?tab=challenge-calendar')}
         />
       </div>
 
@@ -311,12 +313,14 @@ export default function EightFootLadderPage() {
           <button 
             className="bg-green-600 hover:bg-green-700 text-black font-bold px-6 py-3 rounded transition-colors"
             data-testid="button-8ft-lock-in"
+            onClick={() => navigate('/?tab=escrow-challenges')}
           >
             Lock Into Action
           </button>
           <button 
             className="border border-green-600 text-green-400 hover:bg-green-600/20 font-bold px-6 py-3 rounded transition-colors"
             data-testid="button-8ft-view-pools"
+            onClick={() => navigate('/?tab=escrow-challenges')}
           >
             View Match Pools
           </button>

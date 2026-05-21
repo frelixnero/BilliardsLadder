@@ -102,11 +102,19 @@ export default function AuthLanding() {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    onSuccess: () => {
-      toast({
-        title: "Account Created!",
-        description: "Check your email for login instructions.",
-      });
+    onSuccess: (data: any) => {
+      if (data?.verificationEmailSent === false) {
+        toast({
+          title: "Account created, email not sent yet",
+          description: "Use Resend Verification Email from login to send a fresh link.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Check your email for login instructions.",
+        });
+      }
       setShowLogin(true);
     },
     onError: (error: Error) => {
@@ -124,11 +132,19 @@ export default function AuthLanding() {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    onSuccess: () => {
-      toast({
-        title: "Account Created!",
-        description: "Check your email for login instructions.",
-      });
+    onSuccess: (data: any) => {
+      if (data?.verificationEmailSent === false) {
+        toast({
+          title: "Account created, email not sent yet",
+          description: "Use Resend Verification Email from login to send a fresh link.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Check your email for login instructions.",
+        });
+      }
       setShowLogin(true);
     },
     onError: (error: Error) => {
@@ -449,7 +465,7 @@ export default function AuthLanding() {
                               <SelectValue placeholder="Choose your hall size" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="z-[100]">
                             {subscriptionTiers.map((tier) => (
                               <SelectItem key={tier.value} value={tier.value}>
                                 {tier.label} - {tier.description}
@@ -532,7 +548,7 @@ export default function AuthLanding() {
                               <SelectValue placeholder="Choose your starting division" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="z-[100]">
                             {playerTiers.map((tier) => (
                               <SelectItem key={tier.value} value={tier.value}>
                                 {tier.label} - {tier.description}
@@ -557,7 +573,7 @@ export default function AuthLanding() {
                               <SelectValue placeholder="Choose membership level" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="z-[100]">
                             {membershipTiers.map((tier) => (
                               <SelectItem key={tier.value} value={tier.value}>
                                 {tier.label} - {tier.description}

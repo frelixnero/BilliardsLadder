@@ -82,8 +82,15 @@ export default function Signup() {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    onSuccess: (_data: any, variables: OperatorFormData) => {
+    onSuccess: (data: any, variables: OperatorFormData) => {
       setPendingVerificationEmail(variables.email);
+      if (data?.verificationEmailSent === false) {
+        toast({
+          title: "Account created, email not sent yet",
+          description: "Use Resend Verification Email to send a fresh link.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -99,8 +106,15 @@ export default function Signup() {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    onSuccess: (_data: any, variables: PlayerFormData) => {
+    onSuccess: (data: any, variables: PlayerFormData) => {
       setPendingVerificationEmail(variables.email);
+      if (data?.verificationEmailSent === false) {
+        toast({
+          title: "Account created, email not sent yet",
+          description: "Use Resend Verification Email to send a fresh link.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -375,7 +389,7 @@ export default function Signup() {
                             <SelectValue placeholder="Select your skill level" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-[100]">
                           {playerTiers.map((tier) => (
                             <SelectItem key={tier.value} value={tier.value}>
                               <div>
@@ -403,7 +417,7 @@ export default function Signup() {
                             <SelectValue placeholder="Select membership tier" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-[100]">
                           {membershipTiers.map((tier) => (
                             <SelectItem key={tier.value} value={tier.value}>
                               <div>
@@ -594,7 +608,7 @@ export default function Signup() {
                             <SelectValue placeholder="Select your tier" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-[100]">
                           {subscriptionTiers.map((tier) => (
                             <SelectItem key={tier.value} value={tier.value}>
                               <div>

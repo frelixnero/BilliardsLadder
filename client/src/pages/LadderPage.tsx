@@ -351,6 +351,7 @@ const LadderPage: React.FC = () => {
           <button 
             className="btn-gold"
             data-testid="button-challenge-player"
+            onClick={() => navigate('/?tab=escrow-challenges')}
           >
             ⚔️ Challenge a Player
           </button>
