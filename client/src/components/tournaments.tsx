@@ -102,7 +102,7 @@ function CreateTournamentDialog() {
           Create Tournament
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-card border border-neon-green/20">
+      <DialogContent className="bg-card border border-neon-green/20 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Create New Tournament</DialogTitle>
         </DialogHeader>
@@ -125,7 +125,7 @@ function CreateTournamentDialog() {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="entry"
@@ -176,7 +176,7 @@ function CreateTournamentDialog() {
                           <SelectValue placeholder="Select game" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="z-[120]">
                         {gameTypes.map((game) => (
                           <SelectItem key={game} value={game}>
                             {game}
@@ -200,7 +200,7 @@ function CreateTournamentDialog() {
                           <SelectValue placeholder="Select format" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="z-[120]">
                         {formats.map((format) => (
                           <SelectItem key={format} value={format}>
                             {format}

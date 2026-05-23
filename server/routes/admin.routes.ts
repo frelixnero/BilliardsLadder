@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { requireOwner, requireStaffOrOwner } from "../replitAuth";
-import { requireAnyAuth } from "../middleware/auth";
+import { requireRole } from "../middleware/auth";
 import * as adminController from "../controllers/admin.controller";
 import * as rackPointsAdminController from "../controllers/rackPointsAdmin.controller";
 
@@ -58,9 +58,11 @@ export function registerAdminRoutes(app: Express) {
 }
 
 export function registerOperatorRoutes(app: Express) {
-  app.get("/api/operator/settings-complete", requireAnyAuth, adminController.checkOperatorSettingsComplete);
-  app.get("/api/operator/settings", requireAnyAuth, adminController.getOperatorSettings);
-  app.put("/api/operator/settings", requireAnyAuth, adminController.updateOperatorSettings);
+  const requireOperatorPlus = requireRole(["OWNER", "TRUSTEE", "STAFF", "OPERATOR"]);
+
+  app.get("/api/operator/settings-complete", requireOperatorPlus, adminController.checkOperatorSettingsComplete);
+  app.get("/api/operator/settings", requireOperatorPlus, adminController.getOperatorSettings);
+  app.put("/api/operator/settings", requireOperatorPlus, adminController.updateOperatorSettings);
   app.post("/api/operator/toggle-free-month", requireStaffOrOwner, adminController.toggleFreeMonth);
   app.post("/api/operator/customization", requireStaffOrOwner, adminController.updateOperatorCustomization);
 }

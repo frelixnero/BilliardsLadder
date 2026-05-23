@@ -19,7 +19,7 @@ import RookieSection from "@/pages/RookieSection";
 import BarboxLadderPage from "@/pages/BarboxLadderPage";
 import EightFootLadderPage from "@/pages/EightFootLadderPage";
 import EscrowChallenges from "@/components/escrow-challenges";
-import QRRegistration from "@/components/qr-registration";
+import QRRegistration, { PublicQRRegistration } from "@/components/qr-registration";
 import LeagueStandings from "@/components/league-standings";
 import RealTimeNotifications from "@/components/real-time-notifications";
 import PosterGenerator from "@/components/poster-generator";
@@ -86,10 +86,32 @@ function AppContent({ activeTab }: { activeTab: string }) {
     'operator-subscriptions', 'revenue-admin', 'admin', 'admin-training-rewards'
   ];
 
+  const tabRoleAccess: Partial<Record<string, GlobalRole[]>> = {
+    admin: ["OWNER", "TRUSTEE"],
+    operator-settings: ["OWNER", "TRUSTEE", "STAFF", "OPERATOR"],
+    operator-subscriptions: ["OWNER", "TRUSTEE", "OPERATOR"],
+    revenue-admin: ["OWNER", "TRUSTEE", "OPERATOR"],
+    admin-training-rewards: ["OWNER", "STAFF", "OPERATOR"],
+    qr-registration: ["OWNER", "TRUSTEE", "STAFF", "OPERATOR"],
+    monetization: ["OWNER", "TRUSTEE", "OPERATOR"],
+  };
+
   // If trying to access protected content and not authenticated, redirect to login
   if (!isLoading && protectedTabs.includes(currentTab) && !isAuthenticated) {
     window.location.href = '/login';
     return null;
+  }
+
+  // Block URL-based role escalation by enforcing role checks at tab-render time.
+  if (!isLoading && isAuthenticated && user) {
+    const allowedRoles = tabRoleAccess[currentTab];
+    const currentRole = user.globalRole;
+    const isOwner = currentRole === "OWNER";
+
+    if (allowedRoles && !isOwner && !allowedRoles.includes(currentRole)) {
+      window.location.href = '/app?tab=dashboard';
+      return null;
+    }
   }
 
   return (
@@ -486,6 +508,9 @@ function App() {
                 </Route>
                 <Route path="/join">
                   <JoinPage />
+                </Route>
+                <Route path="/register/:sessionId">
+                  <PublicQRRegistration />
                 </Route>
                 <Route path="/home">
                   {() => { window.location.href = "/app?tab=dashboard"; return null; }}

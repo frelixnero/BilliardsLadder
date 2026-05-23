@@ -108,28 +108,28 @@ export default function AIDashboard() {
       </div>
 
       <Tabs defaultValue="matchmaking" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-black/50">
-          <TabsTrigger value="matchmaking" className="flex items-center gap-2">
+        <TabsList className="flex w-full overflow-x-auto whitespace-nowrap bg-black/50 p-1">
+          <TabsTrigger value="matchmaking" className="flex items-center gap-2 shrink-0 min-w-[120px]">
             <Target className="w-4 h-4" />
             Matchmaking
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="flex items-center gap-2">
+          <TabsTrigger value="analysis" className="flex items-center gap-2 shrink-0 min-w-[120px]">
             <TrendingUp className="w-4 h-4" />
             Analysis
           </TabsTrigger>
-          <TabsTrigger value="predictions" className="flex items-center gap-2">
+          <TabsTrigger value="predictions" className="flex items-center gap-2 shrink-0 min-w-[120px]">
             <Brain className="w-4 h-4" />
             Predictions
           </TabsTrigger>
-          <TabsTrigger value="coaching" className="flex items-center gap-2">
+          <TabsTrigger value="coaching" className="flex items-center gap-2 shrink-0 min-w-[120px]">
             <Zap className="w-4 h-4" />
             Coaching
           </TabsTrigger>
-          <TabsTrigger value="community" className="flex items-center gap-2">
+          <TabsTrigger value="community" className="flex items-center gap-2 shrink-0 min-w-[120px]">
             <MessageCircle className="w-4 h-4" />
             Chat
           </TabsTrigger>
-          <TabsTrigger value="commentary" className="flex items-center gap-2">
+          <TabsTrigger value="commentary" className="flex items-center gap-2 shrink-0 min-w-[120px]">
             <Users className="w-4 h-4" />
             Commentary
           </TabsTrigger>
@@ -154,7 +154,7 @@ export default function AIDashboard() {
                   <SelectTrigger data-testid="select-player-matchmaking">
                     <SelectValue placeholder="Choose a player for opponent suggestions" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[120]">
                     {players.map((player) => (
                       <SelectItem key={player.id} value={player.id}>
                         {player.name} (Rating: {player.rating})
@@ -206,7 +206,7 @@ export default function AIDashboard() {
                   <SelectTrigger data-testid="select-player-analysis">
                     <SelectValue placeholder="Choose a player to analyze" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[120]">
                     {players.map((player) => (
                       <SelectItem key={player.id} value={player.id}>
                         {player.name} (Rating: {player.rating})
@@ -252,14 +252,14 @@ export default function AIDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="challenger" className="text-white">Challenger</Label>
                   <Select value={predictionChallenger} onValueChange={setPredictionChallenger}>
                     <SelectTrigger data-testid="select-challenger">
                       <SelectValue placeholder="Select challenger" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[120]">
                       {players.map((player) => (
                         <SelectItem key={player.id} value={player.id}>
                           {player.name}
@@ -274,7 +274,7 @@ export default function AIDashboard() {
                     <SelectTrigger data-testid="select-opponent">
                       <SelectValue placeholder="Select opponent" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[120]">
                       {players.map((player) => (
                         <SelectItem key={player.id} value={player.id}>
                           {player.name}
@@ -291,7 +291,7 @@ export default function AIDashboard() {
                   <SelectTrigger data-testid="select-game-type">
                     <SelectValue placeholder="Select game type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[120]">
                     <SelectItem value="8-ball">8-Ball</SelectItem>
                     <SelectItem value="9-ball">9-Ball</SelectItem>
                     <SelectItem value="straight-pool">Straight Pool</SelectItem>
@@ -350,7 +350,7 @@ export default function AIDashboard() {
                   <SelectTrigger data-testid="select-player-coaching">
                     <SelectValue placeholder="Choose player for coaching" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[120]">
                     {players.map((player) => (
                       <SelectItem key={player.id} value={player.id}>
                         {player.name}

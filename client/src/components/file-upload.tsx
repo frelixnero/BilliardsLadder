@@ -566,10 +566,23 @@ export function FileManager() {
     },
   });
 
+  const toObjectRoutePath = (objectPath: string) => {
+    if (!objectPath) return "/objects";
+    const normalized = objectPath.startsWith("/") ? objectPath : `/${objectPath}`;
+    if (normalized.startsWith("/objects/")) return normalized;
+    return `/objects/${normalized.replace(/^\/+/, "")}`;
+  };
+
+  const toPublicObjectRoutePath = (objectPath: string) => {
+    const privatePath = toObjectRoutePath(objectPath);
+    return privatePath.replace(/^\/objects\//, "/public-objects/");
+  };
+
   const handleCopyLink = async (file: UploadedFile) => {
-    const url = file.visibility === "public" 
-      ? `${window.location.origin}/public-objects${file.objectPath}`
-      : `${window.location.origin}/objects${file.objectPath}`;
+    const routePath = file.visibility === "public"
+      ? toPublicObjectRoutePath(file.objectPath)
+      : toObjectRoutePath(file.objectPath);
+    const url = `${window.location.origin}${routePath}`;
     
     try {
       await navigator.clipboard.writeText(url);
@@ -757,9 +770,9 @@ export function FileManager() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        const url = file.visibility === "public" 
-                          ? `/public-objects${file.objectPath}`
-                          : `/objects${file.objectPath}`;
+                        const url = file.visibility === "public"
+                          ? toPublicObjectRoutePath(file.objectPath)
+                          : toObjectRoutePath(file.objectPath);
                         window.open(url, "_blank");
                       }}
                       data-testid={`button-download-${file.id}`}

@@ -56,26 +56,36 @@ export function createFileRecord(storage: IStorage) {
       if (!user) {
         return res.status(401).json({ error: "User not found" });
       }
+
+      const objectStorageService = new ObjectStorageService();
+      const normalizedPath = objectStorageService.normalizeObjectEntityPath(req.body.objectPath || "");
+      const userRole = user.globalRole || "PLAYER";
+      const allowedPrefix = `/objects/uploads/${userRole}/${userId}/`;
+
+      // Prevent clients from registering metadata for objects outside their own upload namespace.
+      if (!normalizedPath.startsWith(allowedPrefix)) {
+        return res.status(403).json({ error: "Invalid object path for current user" });
+      }
+
+      const visibility = req.body.visibility === "public" ? "public" : "private";
+
+      await objectStorageService.trySetObjectEntityAclPolicy(normalizedPath, {
+        owner: userId,
+        visibility,
+        aclRules: req.body.aclRules || [],
+      });
       
       const validatedData = insertUploadedFileSchema.parse({
         ...req.body,
         userId,
+        objectPath: normalizedPath,
+        visibility,
         uploadedAt: new Date(),
         isActive: true,
       });
       
       const uploadedFile = await storage.createUploadedFile(validatedData);
-      
-      const objectStorageService = new ObjectStorageService();
-      const normalizedPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.objectPath,
-        {
-          owner: userId,
-          visibility: req.body.visibility || "private",
-          aclRules: req.body.aclRules || [],
-        }
-      );
-      
+
       res.status(201).json({
         ...uploadedFile,
         objectPath: normalizedPath,

@@ -21,7 +21,11 @@ export function generateQRRegistration() {
   return async (req: Request, res: Response) => {
     try {
       const sessionId = `qr-${Date.now()}`;
-      const registrationUrl = `${req.protocol}://${req.get('host')}/register/${sessionId}`;
+      const forwardedProto = req.get("x-forwarded-proto")?.split(",")[0]?.trim();
+      const forwardedHost = req.get("x-forwarded-host")?.split(",")[0]?.trim();
+      const protocol = forwardedProto || req.protocol;
+      const host = forwardedHost || req.get("host");
+      const registrationUrl = `${protocol}://${host}/register/${sessionId}`;
       
       const session = {
         id: sessionId,
