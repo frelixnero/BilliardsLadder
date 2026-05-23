@@ -82,19 +82,29 @@ async function runDeploymentChecklist() {
 
   console.log('\n🏗️  Build & Deployment\n');
 
-  // Check if build files exist
+  // Check if build files exist.
   const rootDir = __dirname;
-  const serverDist = path.join(rootDir, 'server', 'dist');
-  const clientDist = path.join(rootDir, 'client', 'dist');
-  if (fs.existsSync(serverDist)) {
-    console.log('✅ OK: Server build exists');
+  const serverBuildCandidates = [
+    path.join(rootDir, 'dist', 'index.js'),
+    path.join(rootDir, 'server', 'dist', 'index.js'),
+  ];
+  const clientBuildCandidates = [
+    path.join(rootDir, 'dist', 'public', 'index.html'),
+    path.join(rootDir, 'client', 'dist', 'index.html'),
+  ];
+
+  const serverBuildPath = serverBuildCandidates.find((candidate) => fs.existsSync(candidate));
+  const clientBuildPath = clientBuildCandidates.find((candidate) => fs.existsSync(candidate));
+
+  if (serverBuildPath) {
+    console.log(`✅ OK: Server build exists (${serverBuildPath})`);
   } else {
     console.log('❌ MISSING: Server build (run npm run build)');
     allGood = false;
   }
 
-  if (fs.existsSync(clientDist)) {
-    console.log('✅ OK: Client build exists');
+  if (clientBuildPath) {
+    console.log(`✅ OK: Client build exists (${clientBuildPath})`);
   } else {
     console.log('❌ MISSING: Client build (run npm run build)');
     allGood = false;
