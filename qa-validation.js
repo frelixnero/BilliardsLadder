@@ -4,6 +4,8 @@
 // Run this after implementing fixes to verify everything works
 
 import fetch from 'node-fetch';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 
@@ -122,8 +124,9 @@ async function runQATests() {
 }
 
 // Run tests if this script is executed directly
-if (require.main === module) {
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (isDirectRun) {
     runQATests().catch(console.error);
 }
 
-module.exports = { runQATests };
+export { runQATests };

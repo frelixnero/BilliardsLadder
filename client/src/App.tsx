@@ -88,11 +88,11 @@ function AppContent({ activeTab }: { activeTab: string }) {
 
   const tabRoleAccess: Partial<Record<string, GlobalRole[]>> = {
     admin: ["OWNER", "TRUSTEE"],
-    operator-settings: ["OWNER", "TRUSTEE", "STAFF", "OPERATOR"],
-    operator-subscriptions: ["OWNER", "TRUSTEE", "OPERATOR"],
-    revenue-admin: ["OWNER", "TRUSTEE", "OPERATOR"],
-    admin-training-rewards: ["OWNER", "STAFF", "OPERATOR"],
-    qr-registration: ["OWNER", "TRUSTEE", "STAFF", "OPERATOR"],
+    "operator-settings": ["OWNER", "TRUSTEE", "STAFF", "OPERATOR"],
+    "operator-subscriptions": ["OWNER", "TRUSTEE", "OPERATOR"],
+    "revenue-admin": ["OWNER", "TRUSTEE", "OPERATOR"],
+    "admin-training-rewards": ["OWNER", "STAFF", "OPERATOR"],
+    "qr-registration": ["OWNER", "TRUSTEE", "STAFF", "OPERATOR"],
     monetization: ["OWNER", "TRUSTEE", "OPERATOR"],
   };
 
