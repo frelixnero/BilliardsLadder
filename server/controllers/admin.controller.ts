@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Stripe from "stripe";
 import { storage } from "../storage";
 import type { User, InsertUser } from "../storage";
+import { notifyAccountBanned, notifyAccountSuspended, notifySystem } from "../services/notifyService";
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" })
@@ -541,6 +542,11 @@ export async function banUser(req: Request, res: Response) {
       banExpiresAt: null,
     });
 
+    notifyAccountBanned({
+      recipientUserId: targetUser.id,
+      reason,
+    });
+
     try {
       const { emailService } = await import("../services/email-service");
       await emailService.sendEmail({
@@ -596,6 +602,11 @@ export async function suspendUser(req: Request, res: Response) {
       banExpiresAt: expiryDate,
     });
 
+    notifyAccountSuspended({
+      recipientUserId: targetUser.id,
+      reason,
+    });
+
     try {
       const { emailService } = await import("../services/email-service");
       await emailService.sendEmail({
@@ -634,6 +645,14 @@ export async function unbanUser(req: Request, res: Response) {
       bannedAt: null,
       bannedBy: null,
       banExpiresAt: null,
+    });
+
+    notifySystem({
+      userId: targetUser.id,
+      title: "Account Reinstated",
+      message: "Your account has been restored and you can sign in again.",
+      urgent: false,
+      actionUrl: "/login",
     });
 
     try {

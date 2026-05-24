@@ -42,6 +42,7 @@ import {
 } from "./controllers/playerDashboard.controller";
 import { registerRevenueAdminRoutes } from "./routes/revenueAdmin.routes";
 import { sanitizeResponse } from "./middleware/sanitizeMiddleware";
+import { requireAnyAuth, requireStaffOrOwner } from "./middleware/auth";
 import { 
   insertPlayerSchema, insertMatchSchema, insertTournamentSchema,
   insertTournamentCalcuttaSchema, insertCalcuttaBidSchema,
@@ -104,8 +105,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint (required for production deployment)
   app.get("/healthz", (_, res) => res.send("ok"));
 
-  // Serve downloadable export files
-  app.get("/api/exports/:filename", (req, res) => {
+  // Serve downloadable export files (staff and owner only)
+  app.get("/api/exports/:filename", requireStaffOrOwner, (req, res) => {
     const filename = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
     const filePath = path.resolve("exports", filename);
     if (!filePath.startsWith(path.resolve("exports"))) {
@@ -203,16 +204,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupPaymentOnboardingRoutes(app, storage);
   
   // Player Career Dashboard API Routes
-  app.get('/api/player/career-stats', getCareerStats);
-  app.get('/api/player/earnings', getPlayerEarnings);
+  app.get('/api/player/career-stats', requireAnyAuth, getCareerStats);
+  app.get('/api/player/earnings', requireAnyAuth, getPlayerEarnings);
   // Dashboard panels — auth checked inside the controllers
-  app.get('/api/player/stats', getPlayerStats);
-  app.get('/api/player/challenges', getPlayerChallengesSummary);
-  app.get('/api/player/leaderboard', getPlayerLeaderboard);
-  app.get('/api/player/services', getPlayerServices);
-  app.post('/api/player/services', createPlayerService);
-  app.post('/api/player/services/:id/activate', activatePlayerService);
-  app.post('/api/player/withdraw', withdrawNow);
+  app.get('/api/player/stats', requireAnyAuth, getPlayerStats);
+  app.get('/api/player/challenges', requireAnyAuth, getPlayerChallengesSummary);
+  app.get('/api/player/leaderboard', requireAnyAuth, getPlayerLeaderboard);
+  app.get('/api/player/services', requireAnyAuth, getPlayerServices);
+  app.post('/api/player/services', requireAnyAuth, createPlayerService);
+  app.post('/api/player/services/:id/activate', requireAnyAuth, activatePlayerService);
+  app.post('/api/player/withdraw', requireAnyAuth, withdrawNow);
 
   // Forgot Password Routes
   setupForgotPasswordRoutes(app);
