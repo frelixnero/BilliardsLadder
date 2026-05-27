@@ -300,9 +300,9 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
   return (
     <header className="sticky top-0 z-50 bg-[#0d1f12]/90 backdrop-blur border-b border-white/10">
       {/* Row 1: Brand (left) + Live + Join via QR (right) */}
-      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-2 md:gap-4">
+      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-2 md:gap-4 min-w-0 overflow-x-hidden">
         <div
-          className="flex items-center gap-2 md:gap-3 cursor-pointer"
+          className="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0"
           onClick={() => window.location.href = "/"}
         >
           <img
@@ -314,14 +314,15 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
             <span className="font-extrabold tracking-wide text-emerald-300 text-sm md:text-lg">
               ACTIONLADDER
             </span>
-            <span className="hidden sm:block text-xs text-emerald-200/70">
+            <span className="hidden xl:block text-xs text-emerald-200/70">
               In here, respect is earned in racks, not words
             </span>
           </div>
         </div>
 
         {/* Desktop Navigation Dropdowns */}
-        <nav className="hidden md:flex items-center gap-2 flex-shrink-0 min-w-0">
+        <div className="hidden md:block flex-1 min-w-0 overflow-hidden">
+          <nav className="flex items-center justify-center gap-2 min-w-max overflow-x-auto no-scrollbar px-2">
           {visibleGroups.map(group => (
             <DropdownMenu key={group.id}>
               <DropdownMenuTrigger className="flex items-center gap-2 text-emerald-200/80 hover:text-white px-4 py-2.5 rounded-lg hover:bg-emerald-500/15 transition-all duration-200 whitespace-nowrap font-medium text-sm border border-transparent hover:border-emerald-500/20">
@@ -353,9 +354,10 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
               </DropdownMenuContent>
             </DropdownMenu>
           ))}
-        </nav>
+          </nav>
+        </div>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
           <span className="hidden sm:inline rounded-full px-3 py-1 text-xs font-bold bg-red-900/40 text-red-300 ring-1 ring-red-500/40">
             ● LIVE NOW
           </span>
