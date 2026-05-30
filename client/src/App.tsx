@@ -266,25 +266,36 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
   // Get user role from authentication - default to PLAYER if not authenticated
   const userRole: GlobalRole = user?.globalRole || "PLAYER";
 
-  // Filter groups based on user role (but show all to encourage signups)
-  const visibleGroups = navigationGroups.filter(group => {
-    // If group has role restrictions, check them (only for authenticated users)
-    if (group.roles && isAuthenticated && userRole !== "OWNER" && !group.roles.includes(userRole)) {
-      return false;
-    }
+  // Hide grouped nav tabs for unauthenticated users.
+  const visibleGroups = !isAuthenticated
+    ? []
+    : navigationGroups
+        .filter(group => {
+          if (group.requiresAuth && !isAuthenticated) {
+            return false;
+          }
 
-    // Filter items within the group based on role (but not auth status)
-    if (isAuthenticated) {
-      group.items = group.items.filter(item => {
-        if ((item as any).roles && userRole !== "OWNER" && !(item as any).roles.includes(userRole)) {
-          return false;
-        }
-        return true;
-      });
-    }
+          if (group.roles && userRole !== "OWNER" && !group.roles.includes(userRole)) {
+            return false;
+          }
 
-    return true; // Show all groups to unauthenticated users
-  });
+          return true;
+        })
+        .map(group => ({
+          ...group,
+          items: group.items.filter(item => {
+            if ((item as any).requiresAuth && !isAuthenticated) {
+              return false;
+            }
+
+            if ((item as any).roles && userRole !== "OWNER" && !(item as any).roles.includes(userRole)) {
+              return false;
+            }
+
+            return true;
+          }),
+        }))
+        .filter(group => group.items.length > 0);
 
   // Show loading state while fetching user data
   if (isLoading) {
@@ -409,7 +420,7 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string; setActiveT
             </>
           )}
           <MobileNav
-            navigationGroups={navigationGroups}
+            navigationGroups={visibleGroups}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             userRole={userRole}
