@@ -159,7 +159,9 @@ interface OperatorSubscriptionEligibility {
   rosterPlayerCount: number;
   subscriptionPlayerCount: number;
   minPlayers: number;
+  maxPlayers: number;
   meetsMinimumPlayers: boolean;
+  exceedsMaxPlayers: boolean;
   minimumAllowedTier: OperatorTier | null;
   allowedTiers: OperatorTier[];
 }
@@ -240,7 +242,9 @@ export default function OperatorSubscriptions() {
   const currentTierKey = currentSubscription?.tier || null;
   const hasActive = currentSubscription?.hasSubscription && currentSubscription?.status === "active";
   const activePlayerCount = eligibility?.activePlayerCount ?? 0;
-  const minPlayers = eligibility?.minPlayers ?? 20;
+  const minPlayers = eligibility?.minPlayers ?? 7;
+  const maxPlayers = eligibility?.maxPlayers ?? 15;
+  const exceedsMaxPlayers = eligibility?.exceedsMaxPlayers ?? false;
   const minimumTierKey = eligibility?.minimumAllowedTier ?? null;
   const allowedTiers = eligibility?.allowedTiers ?? [];
 
@@ -261,10 +265,12 @@ export default function OperatorSubscriptions() {
             Active players detected: <span className="font-semibold text-white">{activePlayerCount}</span>
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Operator subscriptions require at least {minPlayers} active players.
-            {minimumTierKey
-              ? ` With your current count, eligible tiers start at ${minimumTierKey}.`
-              : " Add more active players to unlock hall subscription checkout."}
+            Operator subscriptions require between {minPlayers} and {maxPlayers} active players (bars included).
+            {exceedsMaxPlayers
+              ? ` Current active players (${activePlayerCount}) exceed the ${maxPlayers}-player cap for operator hall subscriptions.`
+              : minimumTierKey
+                ? ` With your current count, the Small Hall tier is the only eligible operator plan.`
+                : " Add more active players to unlock hall subscription checkout."}
           </p>
         </CardContent>
       </Card>
@@ -355,7 +361,11 @@ export default function OperatorSubscriptions() {
                     {checkoutMutation.isPending
                       ? "Processing..."
                       : isDisabled
-                        ? `Requires ${minimumTierKey || `${minPlayers}+`} players`
+                        ? exceedsMaxPlayers
+                          ? `Capped at ${maxPlayers} players`
+                          : tier.key !== "small" && minimumTierKey === "small"
+                            ? "Only Small Hall allowed"
+                            : `Requires ${minimumTierKey || `${minPlayers}+`} players`
                         : `Choose ${tier.name}`}
                   </Button>
                 )}

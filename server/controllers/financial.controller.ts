@@ -60,6 +60,7 @@ type OperatorTier = "small" | "medium" | "large" | "mega";
 
 const OPERATOR_TIER_ORDER: OperatorTier[] = ["small", "medium", "large", "mega"];
 const OPERATOR_SUBSCRIPTION_MIN_PLAYERS = 7;
+const OPERATOR_SUBSCRIPTION_MAX_PLAYERS = 15;
 
 function normalizeOperatorTier(value: unknown): OperatorTier | null {
   if (typeof value !== "string") return null;
@@ -88,9 +89,11 @@ function getOperatorTierForPriceId(priceId: string): OperatorTier | null {
 }
 
 function getAllowedOperatorTiers(playerCount: number): OperatorTier[] {
-  const minimumTier = getOperatorTierForPlayerCount(playerCount);
-  const minTierIndex = OPERATOR_TIER_ORDER.indexOf(minimumTier);
-  return OPERATOR_TIER_ORDER.slice(minTierIndex);
+  if (playerCount > OPERATOR_SUBSCRIPTION_MAX_PLAYERS) {
+    return [];
+  }
+
+  return ["small"];
 }
 
 type OperatorSubscriptionEligibility = {
@@ -98,7 +101,9 @@ type OperatorSubscriptionEligibility = {
   rosterPlayerCount: number;
   subscriptionPlayerCount: number;
   minPlayers: number;
+  maxPlayers: number;
   meetsMinimumPlayers: boolean;
+  exceedsMaxPlayers: boolean;
   minimumAllowedTier: OperatorTier | null;
   allowedTiers: OperatorTier[];
 };
@@ -118,14 +123,17 @@ async function getOperatorSubscriptionEligibilityForUser(
   const subscriptionPlayerCount = existingOperatorSubscription?.playerCount || 0;
   const activePlayerCount = rosterPlayerCount;
   const meetsMinimumPlayers = activePlayerCount >= OPERATOR_SUBSCRIPTION_MIN_PLAYERS;
-  const allowedTiers = meetsMinimumPlayers ? getAllowedOperatorTiers(activePlayerCount) : [];
+  const exceedsMaxPlayers = activePlayerCount > OPERATOR_SUBSCRIPTION_MAX_PLAYERS;
+  const allowedTiers = meetsMinimumPlayers && !exceedsMaxPlayers ? getAllowedOperatorTiers(activePlayerCount) : [];
 
   return {
     activePlayerCount,
     rosterPlayerCount,
     subscriptionPlayerCount,
     minPlayers: OPERATOR_SUBSCRIPTION_MIN_PLAYERS,
+    maxPlayers: OPERATOR_SUBSCRIPTION_MAX_PLAYERS,
     meetsMinimumPlayers,
+    exceedsMaxPlayers,
     minimumAllowedTier: allowedTiers[0] || null,
     allowedTiers,
   };
@@ -215,13 +223,30 @@ export function createCheckoutSession(storage: IStorage) {
 
         const effectiveUserId = dbUser.id;
         const eligibility = await getOperatorSubscriptionEligibilityForUser(storage, effectiveUserId);
-        const { activePlayerCount, minPlayers, meetsMinimumPlayers, minimumAllowedTier, allowedTiers } = eligibility;
+        const {
+          activePlayerCount,
+          minPlayers,
+          maxPlayers,
+          meetsMinimumPlayers,
+          exceedsMaxPlayers,
+          minimumAllowedTier,
+          allowedTiers,
+        } = eligibility;
 
         if (!meetsMinimumPlayers) {
           return res.status(400).json({
             message: `A minimum of ${minPlayers} active players is required for operator subscriptions. Current active players: ${activePlayerCount}.`,
             code: "OPERATOR_SUBSCRIPTION_MIN_PLAYERS_NOT_MET",
             minPlayers,
+            activePlayerCount,
+          });
+        }
+
+        if (exceedsMaxPlayers) {
+          return res.status(400).json({
+            message: `Operator hall subscriptions are capped at ${maxPlayers} active players (bars included). Current active players: ${activePlayerCount}.`,
+            code: "OPERATOR_SUBSCRIPTION_MAX_PLAYERS_EXCEEDED",
+            maxPlayers,
             activePlayerCount,
           });
         }
@@ -235,8 +260,13 @@ export function createCheckoutSession(storage: IStorage) {
         }
 
         if (!allowedTiers.includes(selectedTier)) {
+          const capPolicyMessage =
+            activePlayerCount <= maxPlayers
+              ? `Operator hall subscriptions are limited to the Small tier under the ${maxPlayers}-player cap (bars included).`
+              : null;
+
           return res.status(400).json({
-            message: `Your hall has ${activePlayerCount} active players. Minimum eligible tier is ${minimumAllowedTier}.`,
+            message: capPolicyMessage || `Your hall has ${activePlayerCount} active players. Minimum eligible tier is ${minimumAllowedTier}.`,
             code: "OPERATOR_SUBSCRIPTION_TIER_NOT_ELIGIBLE",
             activePlayerCount,
             minimumAllowedTier,
@@ -586,6 +616,16 @@ export function createOperatorSubscription(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
       const validatedData = insertOperatorSubscriptionSchema.parse(req.body);
+
+      if ((validatedData.playerCount || 0) > OPERATOR_SUBSCRIPTION_MAX_PLAYERS) {
+        return res.status(400).json({
+          message: `Operator hall subscriptions are capped at ${OPERATOR_SUBSCRIPTION_MAX_PLAYERS} active players (bars included).`,
+          code: "OPERATOR_SUBSCRIPTION_MAX_PLAYERS_EXCEEDED",
+          maxPlayers: OPERATOR_SUBSCRIPTION_MAX_PLAYERS,
+          playerCount: validatedData.playerCount,
+        });
+      }
+
       const subscription = await storage.createOperatorSubscription(validatedData);
       res.status(201).json(subscription);
     } catch (error: any) {
@@ -598,6 +638,16 @@ export function updateOperatorSubscription(storage: IStorage) {
   return async (req: Request, res: Response) => {
     try {
       const { operatorId } = req.params;
+
+      if (typeof req.body?.playerCount === "number" && req.body.playerCount > OPERATOR_SUBSCRIPTION_MAX_PLAYERS) {
+        return res.status(400).json({
+          message: `Operator hall subscriptions are capped at ${OPERATOR_SUBSCRIPTION_MAX_PLAYERS} active players (bars included).`,
+          code: "OPERATOR_SUBSCRIPTION_MAX_PLAYERS_EXCEEDED",
+          maxPlayers: OPERATOR_SUBSCRIPTION_MAX_PLAYERS,
+          playerCount: req.body.playerCount,
+        });
+      }
+
       const subscription = await storage.updateOperatorSubscription(operatorId, req.body);
       if (!subscription) {
         return res.status(404).json({ message: "Operator subscription not found" });
@@ -730,6 +780,15 @@ export function calculateOperatorSubscriptionCost() {
 
       if (!playerCount || playerCount < 1) {
         return res.status(400).json({ message: "Player count is required and must be at least 1" });
+      }
+
+      if (playerCount > OPERATOR_SUBSCRIPTION_MAX_PLAYERS) {
+        return res.status(400).json({
+          message: `Operator hall subscriptions are capped at ${OPERATOR_SUBSCRIPTION_MAX_PLAYERS} active players (bars included).`,
+          code: "OPERATOR_SUBSCRIPTION_MAX_PLAYERS_EXCEEDED",
+          maxPlayers: OPERATOR_SUBSCRIPTION_MAX_PLAYERS,
+          playerCount,
+        });
       }
 
       const pricing = OperatorSubscriptionCalculator.calculateTotalCost({
