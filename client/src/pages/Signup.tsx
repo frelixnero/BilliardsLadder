@@ -35,8 +35,8 @@ const playerTiers = [
 
 const membershipTiers = [
   { value: "none", label: "No Membership", description: "Pay per game" },
-  { value: "basic", label: "Basic Membership", description: "$25/month - Reduced fees" },
-  { value: "pro", label: "Pro Membership", description: "$60/month - Includes coaching" },
+  { value: "basic", label: "Standard Membership", description: "$24.99/month - Reduced fees" },
+  { value: "pro", label: "Elite Membership", description: "$74.99/month - Includes coaching" },
 ];
 
 const OIDC_ENABLED = String(import.meta.env.VITE_ENABLE_OIDC ?? "false").toLowerCase() === "true";

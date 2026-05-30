@@ -34,14 +34,14 @@ export function getPlayerSubscriptionTier(tier: string) {
     case "rookie":
       return {
         tier: "rookie",
-        name: "Rookie",
-        monthlyPrice: 2500, // $25/month
-        yearlyPrice: 25500, // $255/year (save $45)
+        name: "Rookie Pass",
+        monthlyPrice: 1399, // $13.99/month
+        yearlyPrice: 15109, // $151.09/year (save $16.79)
         priceId: process.env.PLAYER_ROOKIE_MONTHLY_PRICE_ID || "price_1THmhwDvTG8XWAaKP5IdXAic",
         yearlyPriceId: process.env.PLAYER_ROOKIE_YEARLY_PRICE_ID || "price_1THmhwDvTG8XWAaKP5IdXAic",
         traditionalLeagueCost: 3700, // $37/month typical league cost
-        monthlySavings: 1200, // $12/month savings
-        yearlySavings: 18500, // $185/year savings
+        monthlySavings: 2301, // $23.01/month savings
+        yearlySavings: 1679, // $16.79/year savings vs monthly billing
         challengerFee: 0,
         perks: [
           "Access to all ladder divisions",
@@ -59,13 +59,13 @@ export function getPlayerSubscriptionTier(tier: string) {
       return {
         tier: "standard",
         name: "Standard",
-        monthlyPrice: 3500, // $35/month
-        yearlyPrice: 35700, // $357/year (save $63)
+        monthlyPrice: 2499, // $24.99/month
+        yearlyPrice: 26989, // $269.89/year (save $29.99)
         priceId: process.env.PLAYER_STANDARD_MONTHLY_PRICE_ID || "price_1THmi0DvTG8XWAaKGZwVO8WR",
         yearlyPriceId: process.env.PLAYER_STANDARD_YEARLY_PRICE_ID || "price_1THmi0DvTG8XWAaKGZwVO8WR",
         traditionalLeagueCost: 3700, // $37/month typical league cost
-        monthlySavings: 200, // $2/month savings
-        yearlySavings: 2300, // $23/year savings
+        monthlySavings: 1201, // $12.01/month savings
+        yearlySavings: 2999, // $29.99/year savings vs monthly billing
         challengerFee: 6000,
         perks: [
           "Everything in Rookie",
@@ -84,14 +84,14 @@ export function getPlayerSubscriptionTier(tier: string) {
     case "premium":
       return {
         tier: "premium",
-        name: "Premium",
-        monthlyPrice: 4500, // $45/month
-        yearlyPrice: 45900, // $459/year (save $81)
+        name: "Elite",
+        monthlyPrice: 7499, // $74.99/month
+        yearlyPrice: 80989, // $809.89/year (save $89.99)
         priceId: process.env.PLAYER_PREMIUM_MONTHLY_PRICE_ID || "price_1THmi2DvTG8XWAaKpyx6VNyR",
         yearlyPriceId: process.env.PLAYER_PREMIUM_YEARLY_PRICE_ID || "price_1THmi2DvTG8XWAaKpyx6VNyR",
         traditionalLeagueCost: 3700, // $37/month typical league cost
-        monthlySavings: -800, // $8/month more but saves $40+ through perks
-        yearlySavings: -1900, // $19/year more but saves $400+ annually through perks
+        monthlySavings: 0,
+        yearlySavings: 8999, // $89.99/year savings vs monthly billing
         challengerFee: 6000,
         perks: [
           "Everything in Standard",
@@ -149,7 +149,7 @@ export function registerPlayerBillingRoutes(app: Express) {
       }
 
       // Calculate actual savings for premium users
-      const subscriptionCost = 4500; // $45/month
+      const subscriptionCost = 7499; // $74.99/month
       const commissionSavings = 200 * 0.05 * 100; // $10/month from 5% vs 10% commission on $200 avg bets
       const tutoringValue = 3000; // $30/month free tutoring session
       const tournamentBonus = 100 * 0.05 * 100; // $5/month from 95% vs 90% tournament winnings on $100 avg

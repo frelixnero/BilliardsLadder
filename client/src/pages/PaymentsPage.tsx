@@ -32,22 +32,22 @@ const PaymentsPage: React.FC = () => {
   const paymentOptions = [
     { 
       priceId: 'price_1THmhwDvTG8XWAaKP5IdXAic',
-      amount: '$20/month',
-      description: 'Rookie Membership',
+      amount: '$13.99/month',
+      description: 'Rookie Pass',
       mode: 'subscription',
       metadata: { type: 'membership', tier: 'rookie' }
     },
     {
       priceId: 'price_1THmi0DvTG8XWAaKGZwVO8WR',
-      amount: '$25/month',
-      description: 'Basic Membership',
+      amount: '$24.99/month',
+      description: 'Standard Membership',
       mode: 'subscription',
       metadata: { type: 'membership', tier: 'basic' }
     },
     {
       priceId: 'price_1THmi2DvTG8XWAaKpyx6VNyR',
-      amount: '$60/month',
-      description: 'Pro Membership',
+      amount: '$74.99/month',
+      description: 'Elite Membership',
       mode: 'subscription',
       metadata: { type: 'membership', tier: 'pro' }
     },

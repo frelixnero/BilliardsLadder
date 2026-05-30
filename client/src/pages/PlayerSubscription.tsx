@@ -57,7 +57,7 @@ export function PlayerSubscription() {
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Join the modern billiards platform that saves you money while elevating your game. 
-              Action Ladder costs $21-$41+ less per month than traditional leagues.
+              Rookie Pass is now just $13.99/month, Standard is $24.99/month, and Elite is $74.99/month.
             </p>
           </div>
 
@@ -78,15 +78,15 @@ export function PlayerSubscription() {
                 <div className="space-y-2">
                   <h3 className="font-semibold text-emerald-400">How much do I save?</h3>
                   <p className="text-sm text-gray-300">
-                    Traditional leagues cost $80+ per month. Our Rookie plan starts at $39/month, 
-                    Standard at $59/month, and Premium at $79/month - saving you $21-$41+ monthly.
+                    Traditional leagues cost far more in most markets. Our plans are priced at
+                    Rookie Pass $13.99/month, Standard $24.99/month, and Elite $74.99/month.
                   </p>
                 </div>
                 
                 <div className="space-y-2">
                   <h3 className="font-semibold text-emerald-400">What's the commission rate?</h3>
                   <p className="text-sm text-gray-300">
-                    Rookie: 10%, Standard: 8%, Premium: 5%. Lower rates mean you keep more 
+                    Rookie Pass: 10%, Standard: 8%, Elite: 5%. Lower rates mean you keep more 
                     of your winnings from challenges and tournaments.
                   </p>
                 </div>

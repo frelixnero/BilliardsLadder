@@ -13,8 +13,8 @@ export function MembershipDisplay({ membershipTier, onUpgrade }: MembershipDispl
     switch (tier) {
       case 'basic':
         return {
-          name: 'Basic Member',
-          price: '$25/month',
+          name: 'Standard Member',
+          price: '$24.99/month',
           leagueFees: '5%',
           tournamentEntry: '$25-30',
           icon: <Star className="w-5 h-5" />,
@@ -27,8 +27,8 @@ export function MembershipDisplay({ membershipTier, onUpgrade }: MembershipDispl
         };
       case 'pro':
         return {
-          name: 'Pro Member (580+ Fargo)',
-          price: '$60/month',
+          name: 'Elite Member (580+ Fargo)',
+          price: '$74.99/month',
           leagueFees: '3%',
           tournamentEntry: 'FREE',
           icon: <Crown className="w-5 h-5" />,
@@ -86,7 +86,7 @@ export function MembershipDisplay({ membershipTier, onUpgrade }: MembershipDispl
           <div className="bg-amber-900/20 rounded p-3 mb-4 border border-amber-600/30">
             <div className="text-xs text-amber-300 font-semibold mb-1">📚 Tutor Bonus System</div>
             <div className="text-xs text-gray-300">
-              Effective cost: <span className="text-amber-400 font-bold">$50/month</span> (with 2 tutoring sessions)
+              Effective cost depends on feature use and available loyalty discounts.
             </div>
           </div>
         )}
@@ -104,7 +104,7 @@ export function MembershipDisplay({ membershipTier, onUpgrade }: MembershipDispl
             className="w-full mt-4 bg-amber-600 hover:bg-amber-700 text-black font-bold"
             data-testid="button-upgrade-membership"
           >
-            {membershipTier === 'basic' ? 'Upgrade to Pro' : 'Get Basic Membership'}
+            {membershipTier === 'basic' ? 'Upgrade to Elite' : 'Get Standard Membership'}
           </Button>
         )}
       </CardContent>

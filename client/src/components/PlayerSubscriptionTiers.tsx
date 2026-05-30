@@ -166,7 +166,7 @@ export function PlayerSubscriptionTiers({ userId, currentUserRole }: PlayerSubsc
   };
 
   const formatPrice = (price: number) => {
-    return (price / 100).toFixed(0);
+    return (price / 100).toFixed(2);
   };
 
   if (tiersLoading || statusLoading) {
@@ -221,7 +221,7 @@ export function PlayerSubscriptionTiers({ userId, currentUserRole }: PlayerSubsc
             data-testid="button-yearly-billing"
           >
             Yearly
-            <Badge className="ml-2 bg-green-500 text-black">Save up to $149</Badge>
+            <Badge className="ml-2 bg-green-500 text-black">Best annual value</Badge>
           </button>
         </div>
       </div>
@@ -307,7 +307,9 @@ export function PlayerSubscriptionTiers({ userId, currentUserRole }: PlayerSubsc
                     </div>
                     <div className="flex items-center justify-center gap-2 text-green-400 font-semibold">
                       <TrendingDown className="w-4 h-4" />
-                      Save ${formatPrice(savings)}{selectedBilling === "yearly" ? "/year" : "/month"}
+                      {savings > 0
+                        ? `Save $${formatPrice(savings)}${selectedBilling === "yearly" ? "/year" : "/month"}`
+                        : "Includes advanced tier-exclusive benefits"}
                     </div>
                   </div>
                 </div>

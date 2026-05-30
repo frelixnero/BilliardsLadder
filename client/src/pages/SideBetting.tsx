@@ -230,11 +230,11 @@ export default function ChallengePools() {
       return;
     }
 
-    // Check premium subscription requirement for stakes over $300
+    // Check elite subscription requirement for stakes over $300
     if (stake > 300) {
       toast({ 
-        title: "Premium Subscription Required", 
-        description: "Stakes over $300 require Premium subscription ($45/month). Upgrade to unlock higher stakes.",
+        title: "Elite Subscription Required", 
+        description: "Stakes over $300 require Elite subscription ($74.99/month). Upgrade to unlock higher stakes.",
         variant: "destructive" 
       });
       return;
@@ -501,7 +501,7 @@ export default function ChallengePools() {
                 <Label htmlFor="stake-amount">
                   Challenge Credits Per Side (500 - 30,000)
                   <span className="text-amber-400 text-xs ml-2">
-                    Stakes over $300 require Premium subscription
+                    Stakes over $300 require Elite subscription
                   </span>
                 </Label>
 
@@ -525,16 +525,16 @@ export default function ChallengePools() {
                 {newPotStake && parseFloat(newPotStake) >= 5 && (
                   <div className={`text-sm p-3 rounded border mb-3 ${parseFloat(newPotStake) > 300 ? 'bg-amber-900/30 border-amber-600' : 'bg-muted/30'}`}>
                     <div className={`font-medium mb-1 ${parseFloat(newPotStake) > 300 ? 'text-amber-400' : 'text-green-600'}`}>
-                      {parseFloat(newPotStake) > 300 ? 'Premium Required - Challenge Pool Summary:' : 'Challenge Pool Summary:'}
+                      {parseFloat(newPotStake) > 300 ? 'Elite Required - Challenge Pool Summary:' : 'Challenge Pool Summary:'}
                     </div>
                     {parseFloat(newPotStake) > 300 && (
                       <div className="text-amber-300 text-xs mb-2 p-2 bg-amber-900/50 rounded">
-                        ⚡ Stakes over $300 require Premium subscription ($45/month)
+                        ⚡ Stakes over $300 require Elite subscription ($74.99/month)
                         <button 
                           className="ml-2 text-amber-400 underline hover:text-amber-300"
                           onClick={() => {
-                            // TODO: Navigate to premium subscription page
-                            toast({ title: "Premium Upgrade", description: "Redirecting to Premium subscription..." });
+                            // TODO: Navigate to elite subscription page
+                            toast({ title: "Elite Upgrade", description: "Redirecting to Elite subscription..." });
                           }}
                         >
                           Upgrade Now
@@ -558,7 +558,7 @@ export default function ChallengePools() {
                     min="5"
                     max="30000"
                     step="1"
-                    placeholder="Custom amount (max $300 without Premium)"
+                    placeholder="Custom amount (max $300 without Elite)"
                     value={newPotStake}
                     onChange={(e) => setNewPotStake(e.target.value)}
                     className={parseFloat(newPotStake || "0") > 300 ? "border-amber-500" : ""}

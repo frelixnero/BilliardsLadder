@@ -114,9 +114,9 @@ export default function RevenueAdmin() {
         premium: 3400,
       },
       membershipPricing: {
-        rookie: 2000,
-        standard: 3000,
-        premium: 4000,
+        rookie: 1399,
+        standard: 2499,
+        premium: 7499,
       },
       settings: {
         roundUpEnabled: true,
